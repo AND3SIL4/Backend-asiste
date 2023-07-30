@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)ktc8%dz&l02xob+j7*!8yz1kjwzxs9m4taeb5)tmlh4(t4r*v'
+SECRET_KEY = 'django-insecure-)m!hzs)p1n9sr$(i#id2eo9pnxlvken7qoxrc9p=d9fp5z6jhn'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -26,7 +26,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'app.users.apps.UsersConfig'
+    'rest_framework.authtoken',
+    'drf_spectacular',
+    'apps.users',
 ]
 
 MIDDLEWARE = [
@@ -39,7 +41,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'asiste.urls'
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
@@ -57,7 +59,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'asiste.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 # Database
@@ -66,11 +68,11 @@ WSGI_APPLICATION = 'asiste.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'asiste_v3',
+        'NAME': 'asiste_v4',
         'USER': 'root',
         'PASSWORD': '2002',
-        'HOST': 'localhost',
         'PORT': '3306',
+        'HOST': 'localhost',
     }
 }
 
@@ -117,3 +119,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+

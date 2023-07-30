@@ -25,6 +25,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, document, password, email, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('username', 'ADMINISTRADOR')
 
         return self.create_user(document, password, email, user_type='SUPERUSER', **extra_fields)
 

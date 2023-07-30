@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from apps.users.models import User
 from apps.asistencia.models import (
     Instructor,
     Coordinacion,
@@ -21,10 +20,10 @@ class InstructorSerializer(serializers.ModelSerializer):
 
     # Método para obtener los detalles del usuario relacionado
     def get_user_details(self, instructor):
-        user = instructor.user_field
+        user = instructor.user
         return {
             'document': user.document,
-            'name': user.name,
+            'username': user.username,
             'email': user.email,
             'user_type': user.user_type
         }
@@ -68,6 +67,7 @@ class FichaSerializer(serializers.ModelSerializer):
 
 class AprendizSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
+    ficha_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Aprendiz
@@ -75,20 +75,23 @@ class AprendizSerializer(serializers.ModelSerializer):
 
     # Método para obtener los detalles del usuario relacionado
     def get_user_details(self, aprendiz):
-        user = aprendiz.user_field
+        user = aprendiz.user
         return {
             'document': user.document,
-            'name': user.name,
+            'username': user.username,
             'email': user.email,
             'user_type': user.user_type
         }
 
+    # Método para obtener los detalles de la ficha asociada
+    def get_ficha_details(self, aprendiz):
+        ficha = aprendiz.ficha_aprendiz
+        return FichaSerializer(ficha).data
+
 
 class NovedadSerializer(serializers.ModelSerializer):
     aprendiz = AprendizSerializer()
-    documento_aprendiz = serializers.CharField(source='aprendiz.documento_aprendiz')
 
     class Meta:
         model = Novedad
         fields = '__all__'
-

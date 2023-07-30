@@ -12,7 +12,7 @@ class Instructor(models.Model):
     nombres_instructor = models.CharField(max_length=45)
     apellidos_instructor = models.CharField(max_length=45)
     email_institucional = models.CharField(max_length=50)
-    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
 
     def __str__(self):
         return f"{self.nombres_instructor} {self.apellidos_instructor}"
@@ -64,15 +64,36 @@ class Ficha(models.Model):
     class Meta:
         verbose_name = "Ficha"
         verbose_name_plural = "Fichas"
-
+    NIVEL_FORMACION_CHOICES = (
+        ('TECNICO', 'Técnico'),
+        ('TECNOLOGO', 'Tecnologo'),
+        ('COMPLEMENTARIO', 'Complementario'),
+    )
     id_ficha = models.IntegerField(primary_key=True)
     horario_ficha = models.ManyToManyField(Horario)
     instructor_ficha = models.ManyToManyField(Instructor)
-    nivel_formacion = models.CharField(max_length=20)
+    nivel_formacion = models.CharField(max_length=20, choices=NIVEL_FORMACION_CHOICES)
     programa_ficha = models.ForeignKey(Programa, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.id_ficha}"
+
+
+class Asistencia(models.Model):
+    class Meta:
+        verbose_name = "Asistencia"
+        verbose_name_plural = "Asistencias"
+
+    ESTADO_ASISTENCIA_CHOICES = (
+        ('Asiste', 'Asiste'),
+        ('Falla', 'Falla'),
+        ('Novedad', 'Novedad'),
+    )
+    estado_asistencia = models.CharField(max_length=10, choices=ESTADO_ASISTENCIA_CHOICES)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.fecha} - {self.estado_asistencia}"
 
 
 class Aprendiz(models.Model):
@@ -93,7 +114,8 @@ class Aprendiz(models.Model):
     numero_celular = models.IntegerField()
     genero_aprendiz = models.CharField(max_length=10, choices=GENERO_CHOICES)
     ficha_aprendiz = models.ForeignKey(Ficha, on_delete=models.CASCADE)
-    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
+    asistencia = models.ForeignKey(Asistencia, on_delete=models.DO_NOTHING)
+    user = models.OneToOneField(User, related_name='aprendiz', on_delete=models.DO_NOTHING)
 
     class Meta:
         verbose_name = "Aprendiz"
@@ -116,31 +138,11 @@ class Novedad(models.Model):
 
     aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE)
     id_novedad = models.AutoField(primary_key=True)
-    tipo_novedad = models.CharField(max_length=10,
-                                    choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
+    asistencia = models.ForeignKey(Asistencia, on_delete=models.DO_NOTHING)
+    tipo_novedad = models.CharField(max_length=10, choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
     observaciones = models.TextField(max_length=30, default='')
     archivo_adjunto = models.FileField(upload_to='pdfs/')
     estado_novedad = models.BooleanField(default=False, choices=ESTADO_NOVEDAD_CHOICES)
 
     def __str__(self):
         return f'{self.tipo_novedad} {self.id_novedad}'
-
-
-class Asistencia(models.Model):
-    class Meta:
-        verbose_name = "Asistencia"
-        verbose_name_plural = "Asistencias"
-
-    ESTADO_ASISTENCIA_CHOICES = (
-        ('Asiste', 'Asiste'),
-        ('Falla', 'Falla'),
-        ('Novedad', 'Novedad'),
-    )
-
-    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE)
-    fecha = models.DateField()
-    estado_asistencia = models.CharField(max_length=10, choices=ESTADO_ASISTENCIA_CHOICES)
-    novedad = models.OneToOneField(Novedad, null=True, blank=True, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.aprendiz} - {self.fecha} - {self.estado_asistencia}"

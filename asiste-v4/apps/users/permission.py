@@ -1,37 +1,29 @@
 from rest_framework import permissions
 
 
-# Permisos para usuario aprendiz
-class IsAprendizUser(permissions.BasePermission):
+class IsUserType(permissions.BasePermission):
+    def __init__(self, allowed_types):
+        self.allowed_types = allowed_types
+
     def has_permission(self, request, view):
-        return request.user.user_type == 'APRENDIZ'
+        return request.user.user_type in self.allowed_types
 
 
-class IsAprendizUserReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        # Permite métodos de lectura (GET, HEAD, OPTIONS)
-        if request.method in permissions.SAFE_METHODS:
-            return request.user.user_type == 'APRENDIZ'
-        # Permite a todos los usuarios autenticados realizar otras operaciones
-        return True
+class IsAprendizUser(IsUserType):
+    def __init__(self):
+        super().__init__(allowed_types=['APRENDIZ'])
 
 
-# Permisos
-class IsAdminOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        # Permite todas las operaciones de lectura a cualquier usuario (autenticado o no)
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Solo permite operaciones de escritura (POST, PUT, DELETE) a los administradores
-        return request.user and request.user.is_staff
+class IsInstructorUser(IsUserType):
+    def __init__(self):
+        super().__init__(allowed_types=['INSTRUCTOR'])
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        # Permite todas las operaciones de lectura a cualquier usuario (autenticado o no)
-        if request.method in permissions.SAFE_METHODS:
-            return True
+class IsCoordinacionUser(IsUserType):
+    def __init__(self):
+        super().__init__(allowed_types=['COORDINACION'])
 
-        # Permite operaciones de escritura (PUT, DELETE) solo al propietario del objeto
-        return obj.owner == request.user
+
+class IsBienestarUser(IsUserType):
+    def __init__(self):
+        super().__init__(allowed_types=['BIENESTAR'])

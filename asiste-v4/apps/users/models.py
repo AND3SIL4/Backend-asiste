@@ -49,4 +49,4 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = 'document'
 
     def __str__(self):
-        return self.name
+        return self.username

@@ -31,8 +31,14 @@ class CoordinacionAdmin(admin.ModelAdmin):
 
 # Admin para el modelo Asistencia
 class AsistenciaAdmin(admin.ModelAdmin):
-    list_display = ("fecha", "estado_asistencia")
-    list_display_links = ("fecha", "estado_asistencia")
+    list_display = ('id', 'get_horario', 'aprendiz', 'fecha_asistencia', 'presente')
+    list_filter = ('horario', 'aprendiz', 'presente')
+    search_fields = ('horario__asignatura', 'aprendiz__nombres_aprendiz', 'aprendiz__apellidos_aprendiz')
+
+    def get_horario(self, obj):
+        return ', '.join([str(horario) for horario in obj.horario.all()])
+
+    get_horario.short_description = 'Horarios'
 
 
 # Admin para el modelo Programa
@@ -88,6 +94,11 @@ class NovedadAdmin(admin.ModelAdmin):
     list_display_links = ('id_novedad', 'aprendiz', 'tipo_novedad')
 
 
+class RegistroAsistenciaAdmin(admin.ModelAdmin):
+    list_display = ('horario', 'aprendiz', 'fecha_asistencia', 'presente')
+    list_display_links = ('horario', 'aprendiz', 'fecha_asistencia', 'presente')
+
+
 # Registra el modelo y la vista de administrador correspondiente
 admin.site.register(Novedad, NovedadAdmin)
 admin.site.register(Instructor, InstructorAdmin)
@@ -97,5 +108,6 @@ admin.site.register(Programa, ProgramaAdmin)
 admin.site.register(Horario, HorarioAdmin)
 admin.site.register(Ficha, FichaAdmin)
 admin.site.register(Aprendiz, AprendizAdmin)
+
 
 

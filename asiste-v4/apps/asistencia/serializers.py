@@ -35,12 +35,6 @@ class CoordinacionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AsistenciaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Asistencia
-        fields = '__all__'
-
-
 class ProgramaSerializer(serializers.ModelSerializer):
     coordinacion_programa = CoordinacionSerializer()
 
@@ -90,8 +84,31 @@ class AprendizSerializer(serializers.ModelSerializer):
 
 
 class NovedadSerializer(serializers.ModelSerializer):
-    aprendiz = AprendizSerializer()
+    # Campos de solo lectura para mostrar los detalles del usuario y la ficha
+    user = serializers.ReadOnlyField(source='aprendiz.user.username')
+    ficha = serializers.ReadOnlyField(source='aprendiz.ficha_aprendiz.id_ficha')
+    nombre = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')
+    apellidos = serializers.ReadOnlyField(source='aprendiz.apellidos_aprendiz')
+    documento = serializers.ReadOnlyField(source='aprendiz.documento_aprendiz')
 
     class Meta:
         model = Novedad
         fields = '__all__'
+
+
+class AsistenciaSerializer(serializers.ModelSerializer):
+    horario_id = serializers.IntegerField(source='horario.id', read_only=True)
+    aprendiz_documento = serializers.IntegerField(source='aprendiz.documento_aprendiz', read_only=True)
+    horario_fecha = serializers.DateField(source='horario.fecha', read_only=True)
+    horario_hora_entrada = serializers.TimeField(source='horario.hora_entrada', read_only=True)
+    horario_hora_salida = serializers.TimeField(source='horario.hora_salida', read_only=True)
+    salon = serializers.IntegerField(source='horario.salon', read_only=True)
+    jornada = serializers.CharField(source='horario.jornada', read_only=True)
+    asignatura = serializers.CharField(source='horario.asignatura', read_only=True)
+    nombres_aprendiz = serializers.CharField(source='aprendiz.nombres_aprendiz', read_only=True)
+    apellidos_aprendiz = serializers.CharField(source='aprendiz.apellidos_aprendiz', read_only=True)
+
+    class Meta:
+        model = Asistencia
+        fields = ['horario_id', 'aprendiz_documento', 'horario_fecha', 'horario_hora_entrada', 'horario_hora_salida',
+                  'salon', 'jornada', 'asignatura', 'nombres_aprendiz', 'apellidos_aprendiz', 'presente']

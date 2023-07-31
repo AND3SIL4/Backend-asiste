@@ -79,23 +79,6 @@ class Ficha(models.Model):
         return f"{self.id_ficha}"
 
 
-class Asistencia(models.Model):
-    class Meta:
-        verbose_name = "Asistencia"
-        verbose_name_plural = "Asistencias"
-
-    ESTADO_ASISTENCIA_CHOICES = (
-        ('Asiste', 'Asiste'),
-        ('Falla', 'Falla'),
-        ('Novedad', 'Novedad'),
-    )
-    estado_asistencia = models.CharField(max_length=10, choices=ESTADO_ASISTENCIA_CHOICES)
-    fecha = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.fecha} - {self.estado_asistencia}"
-
-
 class Aprendiz(models.Model):
     GENERO_CHOICES = (
         ("Masculino", "Masculino"),
@@ -114,7 +97,6 @@ class Aprendiz(models.Model):
     numero_celular = models.IntegerField()
     genero_aprendiz = models.CharField(max_length=10, choices=GENERO_CHOICES)
     ficha_aprendiz = models.ForeignKey(Ficha, on_delete=models.CASCADE)
-    asistencia = models.ForeignKey(Asistencia, on_delete=models.DO_NOTHING)
     user = models.OneToOneField(User, related_name='aprendiz', on_delete=models.DO_NOTHING)
 
     class Meta:
@@ -124,6 +106,25 @@ class Aprendiz(models.Model):
 
     def __str__(self):
         return f"{self.nombres_aprendiz} {self.apellidos_aprendiz}"
+
+
+class Asistencia(models.Model):
+    class Meta:
+        verbose_name = "Asistencia"
+        verbose_name_plural = "Asistencias"
+
+    ESTADO_ASISTENCIA_CHOICES = (
+        ('Asiste', 'Asiste'),
+        ('Falla', 'Falla'),
+        ('Novedad', 'Novedad'),
+    )
+    horario = models.ManyToManyField(Horario)
+    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE)
+    fecha_asistencia = models.DateField(auto_now_add=True)
+    presente = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.fecha_asistencia} - {self.presente}"
 
 
 class Novedad(models.Model):
@@ -136,11 +137,11 @@ class Novedad(models.Model):
         verbose_name = 'Novedad'
         verbose_name_plural = 'Novedades'
 
-    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE)
+    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
     id_novedad = models.AutoField(primary_key=True)
     asistencia = models.ForeignKey(Asistencia, on_delete=models.DO_NOTHING)
     tipo_novedad = models.CharField(max_length=10, choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
-    observaciones = models.TextField(max_length=30, default='')
+    observaciones = models.TextField(max_length=30)
     archivo_adjunto = models.FileField(upload_to='pdfs/')
     estado_novedad = models.BooleanField(default=False, choices=ESTADO_NOVEDAD_CHOICES)
 

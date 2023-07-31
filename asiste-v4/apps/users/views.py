@@ -7,11 +7,13 @@ from apps.users.permission import IsAprendizUser
 
 
 # Create your views here.
+# VISTA PARA CREAR UN USUARIO
 class CreateUserView(generics.CreateAPIView):
     """Vista para crear un usuario"""
     serializer_class = UserSerializer
 
 
+# VISTA PARA HACER CRUD EN EL USUARIO
 class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
     """Vista para GET, PUT, PATCH de usuario"""
     serializer_class = UserSerializer
@@ -22,6 +24,7 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+# VISTA PARA CREAR UN TOKEN DE AUTHENTICATION
 class CreateTokenView(ObtainAuthToken):
     """Vista para crear un token"""
     serializer_class = AuthTokenSerializers

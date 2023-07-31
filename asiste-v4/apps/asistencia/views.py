@@ -2,9 +2,10 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from apps.users.permission import IsAprendizUser, IsInstructorUser, IsCoordinacionUser, IsBienestarUser
-from apps.asistencia.models import Novedad, Aprendiz, Asistencia
-from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer
+from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, Horario
+from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer, InstructorSerializer
 from rest_framework.views import Response, status
+from rest_framework.decorators import action
 
 
 # Create your views here.
@@ -49,18 +50,22 @@ class NovedadListView(ModelViewSet):
 
 # ACTUALIZAR DATOS DE APRENDIZ
 class AprendizViewSet(ModelViewSet):
-    queryset = Aprendiz.objects.all()
     serializer_class = AprendizSerializer
     permission_classes = [IsAuthenticated, IsAprendizUser]
     authentication_classes = [TokenAuthentication]
 
-    def get_object(self):
-        # Función se utiliza para obtener el objeto Aprendiz del usuario autenticado
-        return self.request.user.aprendiz
+    def get_queryset(self):
+        return Aprendiz.objects.filter(user=self.request.user)
 
     def perform_update(self, serializer):
-        # Aquí se realiza la actualización de los datos del Aprendiz autenticado
         serializer.save()
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 # CREAR NOVEDADES Y ESTADO DE ASISTENCIA DE APRENDICES
@@ -80,18 +85,6 @@ class AsistenciaViewSet(ReadOnlyModelViewSet):
         except Aprendiz.DoesNotExist:
             # Si el objeto Aprendiz no existe para el usuario, devuelve una consulta vacía
             return Asistencia.objects.none()
-
-
-# LISTA DE APRENDICES PARA INSTRUCTOR
-class AprendizListView(ReadOnlyModelViewSet):
-    queryset = Aprendiz.objects.all()
-    serializer_class = AprendizSerializer
-    permission_classes = [IsAuthenticated, IsInstructorUser]
-    authentication_classes = [TokenAuthentication]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Aprendiz.objects.filter(ficha_aprendiz__instructor_ficha__user=user)
 
 
 # NOVEDADES APRENDICES PARA INSTRUCTORES
@@ -129,3 +122,70 @@ class NovedadAcceptanceView(ModelViewSet):
 
         # Procesar la actualización como de costumbre
         return super().update(request, *args, **kwargs)
+
+
+# LISTA DE APRENDICES Y LLAMADO DE ASISTENCIA, POR INSTRUCTOR
+class InstructorViewSet(ModelViewSet):
+    queryset = Instructor.objects.all()
+    serializer_class = InstructorSerializer
+    permission_classes = [IsAuthenticated, IsInstructorUser]
+    authentication_classes = [TokenAuthentication]
+
+    @action(detail=True, methods=['get'])
+    def lista_asistencia(self, request, pk=None):
+        instructor = self.get_object()
+        ficha = instructor.instructor_ficha.first()
+
+        if not ficha:
+            return Response({'error': 'El instructor no tiene una ficha asociada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        lista_asistencia = []
+
+        for instructor in ficha.instructor_ficha.all():
+            for horario in instructor.horarios.all():
+                for aprendiz in ficha.aprendiz_set.all():
+                    registro_asistencia, created = Asistencia.objects.get_or_create(
+                        horario=horario,
+                        aprendiz=aprendiz,
+                        fecha_asistencia=horario.fecha
+                    )
+                    lista_asistencia.append({
+                        'horario': horario.id,
+                        'aprendiz': aprendiz.documento_aprendiz,
+                        'presente': registro_asistencia.presente,
+                    })
+
+        return Response(lista_asistencia)
+
+    @action(detail=True, methods=['post'])
+    def registrar_asistencia(self, request, pk=None):
+        instructor = self.get_object()
+        horario_id = request.data.get('horario_id')
+        aprendices_documentos = request.data.get('aprendices_documentos', [])
+
+        if not horario_id or not aprendices_documentos:
+            return Response({'error': 'Debe proporcionar el ID del horario y la lista de documentos de aprendices.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            horario = Horario.objects.get(pk=horario_id)
+        except Horario.DoesNotExist:
+            return Response({'error': 'El horario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+
+        for documento in aprendices_documentos:
+            try:
+                aprendiz = Aprendiz.objects.get(documento_aprendiz=documento)
+            except Aprendiz.DoesNotExist:
+                return Response({'error': f'El aprendiz con el documento {documento} no existe.'},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            registro_asistencia, created = Asistencia.objects.get_or_create(
+                horario=horario,
+                aprendiz=aprendiz,
+                fecha_asistencia=horario.fecha
+            )
+            registro_asistencia.presente = True
+            registro_asistencia.save()
+
+        return Response({'detail': 'Asistencia registrada correctamente.'}, status=status.HTTP_200_OK)
+

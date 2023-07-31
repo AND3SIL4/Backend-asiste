@@ -5,7 +5,7 @@ from apps.users.permission import IsAprendizUser, IsInstructorUser, IsCoordinaci
 from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, Horario
 from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer, InstructorSerializer
 from rest_framework.views import Response, status
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view
 
 
 # Create your views here.
@@ -126,66 +126,61 @@ class NovedadAcceptanceView(ModelViewSet):
 
 # LISTA DE APRENDICES Y LLAMADO DE ASISTENCIA, POR INSTRUCTOR
 class InstructorViewSet(ModelViewSet):
-    queryset = Instructor.objects.all()
+    queryset = Instructor.objects.all()  # Agrega esta línea para definir el queryset
     serializer_class = InstructorSerializer
     permission_classes = [IsAuthenticated, IsInstructorUser]
     authentication_classes = [TokenAuthentication]
 
-    @action(detail=True, methods=['get'])
-    def lista_asistencia(self, request, pk=None):
-        instructor = self.get_object()
-        ficha = instructor.instructor_ficha.first()
+
+@api_view(['GET'])
+def lista_aprendices_instructor(request, instructor_id):
+    try:
+        instructor = Instructor.objects.get(pk=instructor_id)
+    except Instructor.DoesNotExist:
+        return Response({'error': 'El instructor especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+
+    ficha = instructor.instructor_ficha.first()
+
+    if not ficha:
+        return Response({'error': 'El instructor no tiene una ficha asociada.'}, status=status.HTTP_404_NOT_FOUND)
+
+    aprendices = ficha.aprendiz_set.all()
+    serializer = AprendizSerializer(aprendices, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET', 'POST'])
+def lista_asistencia(request, instructor_id):
+    if request.method == 'GET':
+        try:
+            instructor = Instructor.objects.get(pk=instructor_id)
+        except Instructor.DoesNotExist:
+            return Response({'error': 'El instructor especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+
+        ficha = instructor.ficha_instructor.first()
 
         if not ficha:
-            return Response({'error': 'El instructor no tiene una ficha asociada.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'El instructor no tiene una ficha asociada.'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         lista_asistencia = []
 
-        for instructor in ficha.instructor_ficha.all():
-            for horario in instructor.horarios.all():
-                for aprendiz in ficha.aprendiz_set.all():
-                    registro_asistencia, created = Asistencia.objects.get_or_create(
-                        horario=horario,
-                        aprendiz=aprendiz,
-                        fecha_asistencia=horario.fecha
-                    )
-                    lista_asistencia.append({
-                        'horario': horario.id,
-                        'aprendiz': aprendiz.documento_aprendiz,
-                        'presente': registro_asistencia.presente,
-                    })
+        for horario in ficha.horario_ficha.all():
+            for aprendiz in ficha.aprendiz_set.all():
+                registro_asistencia, created = Asistencia.objects.get_or_create(
+                    horario=horario,
+                    aprendiz=aprendiz,
+                    fecha_asistencia=horario.fecha
+                )
+                lista_asistencia.append({
+                    'horario': horario.id,
+                    'aprendiz': aprendiz.documento_aprendiz,
+                    'presente': registro_asistencia.presente,
+                })
 
-        return Response(lista_asistencia)
+        return Response(lista_asistencia, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'])
-    def registrar_asistencia(self, request, pk=None):
-        instructor = self.get_object()
-        horario_id = request.data.get('horario_id')
-        aprendices_documentos = request.data.get('aprendices_documentos', [])
-
-        if not horario_id or not aprendices_documentos:
-            return Response({'error': 'Debe proporcionar el ID del horario y la lista de documentos de aprendices.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            horario = Horario.objects.get(pk=horario_id)
-        except Horario.DoesNotExist:
-            return Response({'error': 'El horario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-
-        for documento in aprendices_documentos:
-            try:
-                aprendiz = Aprendiz.objects.get(documento_aprendiz=documento)
-            except Aprendiz.DoesNotExist:
-                return Response({'error': f'El aprendiz con el documento {documento} no existe.'},
-                                status=status.HTTP_404_NOT_FOUND)
-
-            registro_asistencia, created = Asistencia.objects.get_or_create(
-                horario=horario,
-                aprendiz=aprendiz,
-                fecha_asistencia=horario.fecha
-            )
-            registro_asistencia.presente = True
-            registro_asistencia.save()
+    elif request.method == 'POST':
+        # Implementa aquí la lógica para registrar la asistencia
 
         return Response({'detail': 'Asistencia registrada correctamente.'}, status=status.HTTP_200_OK)
-

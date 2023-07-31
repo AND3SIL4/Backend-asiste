@@ -13,6 +13,7 @@ class Instructor(models.Model):
     apellidos_instructor = models.CharField(max_length=45)
     email_institucional = models.CharField(max_length=50)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
+    # fichas = models.ForeignKey(Ficha, on_delete=models.CASCADE, related_name='instructores')
 
     def __str__(self):
         return f"{self.nombres_instructor} {self.apellidos_instructor}"
@@ -71,7 +72,7 @@ class Ficha(models.Model):
     )
     id_ficha = models.IntegerField(primary_key=True)
     horario_ficha = models.ManyToManyField(Horario)
-    instructor_ficha = models.ManyToManyField(Instructor)
+    instructores = models.ManyToManyField(Instructor)
     nivel_formacion = models.CharField(max_length=20, choices=NIVEL_FORMACION_CHOICES)
     programa_ficha = models.ForeignKey(Programa, on_delete=models.CASCADE)
 

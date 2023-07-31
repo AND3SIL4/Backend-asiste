@@ -7,6 +7,8 @@ from apps.asistencia.views import (
     NovedadAprendizView,
     NovedadAcceptanceView,
     InstructorViewSet,
+    lista_aprendices_instructor,
+    lista_asistencia,
 )
 
 # Crear un enrutador para las vistas basadas en ViewSets
@@ -25,8 +27,10 @@ router.register(r'novedades-aprendices', NovedadAprendizView, basename='novedade
 # Usuarios autenticados con el tipo de usuario "Coordinación" o "Bienestar" podrán acceder y actualizar novedades para su aceptación.
 router.register(r'novedades-acceptation', NovedadAcceptanceView, basename='novedades-acceptation')
 # Usuarios autenticados con el tipo de usuario "Instructor" podrán acceder a la información de los instructores y usar las acciones lista_asistencia y registrar_asistencia.
-router.register(r'instructores', InstructorViewSet)
+router.register(r'instructor', InstructorViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('instructores/<int:instructor_id>/lista_aprendices/', lista_aprendices_instructor, name='lista_aprendices_instructor'),
+    path('instructores/<int:instructor_id>/lista_asistencia/', lista_asistencia, name='lista_asistencia'),
 ]

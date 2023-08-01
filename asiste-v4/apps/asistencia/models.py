@@ -13,7 +13,8 @@ class Instructor(models.Model):
     apellidos_instructor = models.CharField(max_length=45)
     email_institucional = models.CharField(max_length=50)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
-    # fichas = models.ForeignKey(Ficha, on_delete=models.CASCADE, related_name='instructores')
+    registro_asistencia = models.ManyToManyField('Asistencia', blank=True)
+
 
     def __str__(self):
         return f"{self.nombres_instructor} {self.apellidos_instructor}"
@@ -36,8 +37,13 @@ class Programa(models.Model):
         verbose_name = "Programa"
         verbose_name_plural = "Programas"
 
+    PROGRAMA_CHOICES = (
+        ('ADSO', 'Analisis y desarrollo de software'),
+        ('ADSI', 'Analisis y desarrollo de sistemas'),
+    )
+
     id_programa = models.IntegerField(primary_key=True)
-    nombre_programa = models.CharField(max_length=45, choices=[('ADSO', 'ADSO')])
+    nombre_programa = models.CharField(max_length=45, choices=PROGRAMA_CHOICES)
     coordinacion_programa = models.ForeignKey(Coordinacion, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -49,16 +55,22 @@ class Horario(models.Model):
         verbose_name = "Horario"
         verbose_name_plural = "Horarios"
 
+    JORNADA_CHOICES = (
+        ('DIURNA', 'Diurna'),
+        ('TARDE', 'Tarde'),
+        ('NOCTURNA', 'Nocturna')
+    )
+
+    horario_id = models.IntegerField(primary_key=True, unique=True)
     fecha = models.DateField()
     hora_entrada = models.TimeField()
     hora_salida = models.TimeField()
     salon = models.IntegerField()
-    jornada = models.CharField(max_length=10,
-                               choices=[('Diurna', 'Diurna'), ('Tarde', 'Tarde'), ('Nocturna', 'Nocturna')])
+    jornada = models.CharField(max_length=10, choices=JORNADA_CHOICES)
     asignatura = models.CharField(max_length=45)
 
     def __str__(self):
-        return f"{self.fecha}"
+        return f"{self.fecha} - {self.jornada} - {self.salon}"
 
 
 class Ficha(models.Model):
@@ -88,9 +100,13 @@ class Aprendiz(models.Model):
         ("Bisexual", "Bisexual"),
         ("Transexual", "Transexual"),
     )
+    TIPO_DOCUMENTO_CHOICES = (
+        ('CC', 'Cedula de ciudadanía'),
+        ('TI', 'Tarjeta de identidad')
+    )
 
     documento_aprendiz = models.IntegerField(primary_key=True)
-    tipo_documento = models.CharField(max_length=20, choices=[('CC', 'Cedula de ciudadanía'), ('TI', 'Tarjeta de identidad')])
+    tipo_documento = models.CharField(max_length=20, choices=TIPO_DOCUMENTO_CHOICES)
     nombres_aprendiz = models.CharField(max_length=45)
     apellidos_aprendiz = models.CharField(max_length=45)
     email_personal_aprendiz = models.CharField(max_length=45)
@@ -119,13 +135,13 @@ class Asistencia(models.Model):
         ('Falla', 'Falla'),
         ('Novedad', 'Novedad'),
     )
-    horario = models.ManyToManyField(Horario)
-    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE)
+    # horario = models.ManyToManyField(Horario, blank=False, null=False)
     fecha_asistencia = models.DateField(auto_now_add=True)
-    presente = models.BooleanField(default=False)
+    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
+    presente = models.CharField(max_length=45, choices=ESTADO_ASISTENCIA_CHOICES,default=False, blank=False, null=False)
 
     def __str__(self):
-        return f"{self.fecha_asistencia} - {self.presente}"
+        return f"{self.fecha_asistencia} - {self.aprendiz.nombres_aprendiz}"
 
 
 class Novedad(models.Model):
@@ -140,7 +156,7 @@ class Novedad(models.Model):
 
     aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
     id_novedad = models.AutoField(primary_key=True)
-    asistencia = models.ForeignKey(Asistencia, on_delete=models.DO_NOTHING)
+    asistencia = models.ForeignKey(Asistencia, on_delete=models.CASCADE)
     tipo_novedad = models.CharField(max_length=10, choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
     observaciones = models.TextField(max_length=30)
     archivo_adjunto = models.FileField(upload_to='pdfs/')

@@ -2,14 +2,14 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from apps.users.permission import IsAprendizUser, IsInstructorUser, IsCoordinacionUser, IsBienestarUser
-from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, Horario
+from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, Horario, Ficha
 from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer, InstructorSerializer
 from rest_framework.views import Response, status
-from rest_framework.decorators import api_view
+from django.db.models import Q
+from rest_framework.decorators import action
 
 
 # Create your views here.
-
 # PERMISOS PARA USUARIOS
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()
@@ -26,12 +26,14 @@ class NovedadListView(ModelViewSet):
 
         # Instructor: puede ver novedades y actualizar datos de asistencia de sus aprendices
         if IsInstructorUser().has_permission(self.request, self):
-            return self.queryset.filter(aprendiz__ficha_aprendiz__instructor_ficha__user=user)
+            return self.queryset.filter(
+                Q(aprendiz__ficha_aprendiz__instructores__user=user) |
+                Q(aprendiz__ficha_aprendiz__instructores__user__instructor__user=user)
+            )
 
         # Coordinación y Bienestar: pueden editar novedades
-        if IsBienestarUser().has_permission(self.request, self):
-            return self.queryset
-        if IsCoordinacionUser().has_permission(self.request, self):
+        if IsBienestarUser().has_permission(self.request, self) or IsCoordinacionUser().has_permission(self.request,
+                                                                                                       self):
             return self.queryset
 
         # Si no es ninguno de los roles anteriores, no se permite el acceso
@@ -108,10 +110,13 @@ class NovedadAcceptanceView(ModelViewSet):
 
     def get_permissions(self):
         # Asignar el permiso adecuado según el tipo de usuario
-        if self.request.user.user_type == 'COORDINACION':
-            return [IsCoordinacionUser()]
-        elif self.request.user.user_type == 'BIENESTAR':
-            return [IsBienestarUser()]
+        if self.request.user.is_authenticated:
+            if self.request.user.user_type == 'COORDINACION':
+                return [IsCoordinacionUser()]
+            elif self.request.user.user_type == 'BIENESTAR':
+                return [IsBienestarUser()]
+            else:
+                return []
         else:
             return []
 
@@ -126,61 +131,103 @@ class NovedadAcceptanceView(ModelViewSet):
 
 # LISTA DE APRENDICES Y LLAMADO DE ASISTENCIA, POR INSTRUCTOR
 class InstructorViewSet(ModelViewSet):
-    queryset = Instructor.objects.all()  # Agrega esta línea para definir el queryset
     serializer_class = InstructorSerializer
     permission_classes = [IsAuthenticated, IsInstructorUser]
     authentication_classes = [TokenAuthentication]
 
+    @action(detail=True, methods=['PATCH'])
+    def get_queryset(self):
+        # Obtener el instructor asociado al usuario que ha iniciado sesión
+        instructor = self.request.user.instructor
 
-@api_view(['GET'])
-def lista_aprendices_instructor(request, instructor_id):
-    try:
-        instructor = Instructor.objects.get(pk=instructor_id)
-    except Instructor.DoesNotExist:
-        return Response({'error': 'El instructor especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+        # Devolver solo el instructor asociado al usuario actual
+        return Instructor.objects.filter(documento=instructor.documento)
 
-    ficha = instructor.instructor_ficha.first()
+    @action(detail=True, methods=['PATCH'])
+    def update_instructor(self, request, pk=None):
+        # Obtener el instructor asociado al usuario que ha iniciado sesión
+        instructor = self.request.user.instructor
 
-    if not ficha:
-        return Response({'error': 'El instructor no tiene una ficha asociada.'}, status=status.HTTP_404_NOT_FOUND)
+        # Obtener el objeto del instructor asociado al usuario
+        instance = Instructor.objects.get(documento=instructor.documento)
 
-    aprendices = ficha.aprendiz_set.all()
-    serializer = AprendizSerializer(aprendices, many=True)
+        # Obtener los datos enviados en el request
+        data = request.data
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
+        # Actualizar el objeto del instructor con los nuevos datos del request
+        serializer = InstructorSerializer(instance, data=data, partial=True)
 
-@api_view(['GET', 'POST'])
-def lista_asistencia(request, instructor_id):
-    if request.method == 'GET':
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['GET'])
+    def lista_aprendices(self, request, pk=None):
+        instructor = self.get_object()
+        aprendices = Aprendiz.objects.filter(ficha_aprendiz__instructores=instructor)
+        serializer = AprendizSerializer(aprendices, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=['POST', 'GET'])
+    def registrar_asistencia(self, request, pk=None):
+        instructor = self.get_object()
+        data = request.data
+
+        # Asegurarse de que el usuario actual sea un Instructor y esté relacionado con este Instructor específico
+        if not (request.user.user_type == 'INSTRUCTOR' and instructor.user == request.user):
+            return Response({'error': 'No tienes permiso para registrar asistencia para este instructor.'},status=status.HTTP_403_FORBIDDEN)
+
+        # Obtener la ficha y el horario asociado a la asistencia
+        id_ficha = data.get('ficha_id')
+        horario_id = data.get('horario_id')
+        documento_aprendiz = data.get('documento_aprendiz')
+        nombres_aprendiz = data.get('nombres_aprendiz')
+        apellidos_aprendiz = data.get('apellidos_aprendiz')
+
         try:
-            instructor = Instructor.objects.get(pk=instructor_id)
-        except Instructor.DoesNotExist:
-            return Response({'error': 'El instructor especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            ficha = Ficha.objects.get(id_ficha=id_ficha)
+        except Ficha.DoesNotExist:
+            return Response({'error': 'Ficha no existe'}, status=status.HTTP_404_NOT_FOUND)
 
-        ficha = instructor.ficha_instructor.first()
+        try:
+            horario = Horario.objects.get(horario_id=horario_id)
+        except Horario.DoesNotExist:
+            return Response({'error': 'Horario no existe'}, status=status.HTTP_404_NOT_FOUND)
 
-        if not ficha:
-            return Response({'error': 'El instructor no tiene una ficha asociada.'},
-                            status=status.HTTP_404_NOT_FOUND)
+        # Verificar si el aprendiz asociado a la asistencia pertenece a la ficha de este instructor
+        try:
+            aprendiz_data = data.get('aprendiz', {})
+            if not isinstance(aprendiz_data, dict):
+                return Response({'error': 'Datos del aprendiz no proporcionados o en un formato incorrecto.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        lista_asistencia = []
+            documento_aprendiz = aprendiz_data.get('documento_aprendiz')
+            if documento_aprendiz is None:
+                return Response({'error': 'Documento del aprendiz no proporcionado.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        for horario in ficha.horario_ficha.all():
-            for aprendiz in ficha.aprendiz_set.all():
-                registro_asistencia, created = Asistencia.objects.get_or_create(
-                    horario=horario,
-                    aprendiz=aprendiz,
-                    fecha_asistencia=horario.fecha
-                )
-                lista_asistencia.append({
-                    'horario': horario.id,
-                    'aprendiz': aprendiz.documento_aprendiz,
-                    'presente': registro_asistencia.presente,
-                })
+            aprendiz = Aprendiz.objects.get(documento_aprendiz=documento_aprendiz, ficha_aprendiz=ficha)
+        except Aprendiz.DoesNotExist:
+            return Response({'error': 'Aprendiz no existe.'}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(lista_asistencia, status=status.HTTP_200_OK)
+        # Crear la asistencia
+        asistencia_data = {
+            'aprendiz': aprendiz.pk,
+            'fecha_asistencia': data.get('fecha_asistencia'),
+            'presente': data.get('presente')
+        }
 
-    elif request.method == 'POST':
-        # Implementa aquí la lógica para registrar la asistencia
+        asistencia_serializer = AsistenciaSerializer(data=asistencia_data)
 
-        return Response({'detail': 'Asistencia registrada correctamente.'}, status=status.HTTP_200_OK)
+        if asistencia_serializer.is_valid():
+            asistencia_serializer.save()
+            return Response(asistencia_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(asistencia_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

@@ -31,14 +31,12 @@ class CoordinacionAdmin(admin.ModelAdmin):
 
 # Admin para el modelo Asistencia
 class AsistenciaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_horario', 'aprendiz', 'fecha_asistencia', 'presente')
-    list_filter = ('horario', 'aprendiz', 'presente')
-    search_fields = ('horario__asignatura', 'aprendiz__nombres_aprendiz', 'aprendiz__apellidos_aprendiz')
+    list_display = ('fecha_asistencia', 'aprendiz', 'presente_display')  # Assuming 'presente_display' is a method in AsistenciaAdmin
+    list_filter = ('fecha_asistencia', 'presente')  # Assuming 'presente' is a field in the Asistencia model
 
-    def get_horario(self, obj):
-        return ', '.join([str(horario) for horario in obj.horario.all()])
-
-    get_horario.short_description = 'Horarios'
+    def presente_display(self, obj):
+        return obj.get_presente_display()
+    presente_display.short_description = 'Presente'
 
 
 # Admin para el modelo Programa

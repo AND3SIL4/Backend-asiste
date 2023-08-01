@@ -51,7 +51,7 @@ class HorarioSerializer(serializers.ModelSerializer):
 
 class FichaSerializer(serializers.ModelSerializer):
     horario_ficha = HorarioSerializer(many=True)
-    instructor_ficha = InstructorSerializer(many=True)
+    instructores = InstructorSerializer(many=True)
     programa_ficha = ProgramaSerializer()
 
     class Meta:
@@ -97,18 +97,16 @@ class NovedadSerializer(serializers.ModelSerializer):
 
 
 class AsistenciaSerializer(serializers.ModelSerializer):
-    horario_id = serializers.IntegerField(source='horario.id', read_only=True)
-    aprendiz_documento = serializers.IntegerField(source='aprendiz.documento_aprendiz', read_only=True)
-    horario_fecha = serializers.DateField(source='horario.fecha', read_only=True)
-    horario_hora_entrada = serializers.TimeField(source='horario.hora_entrada', read_only=True)
-    horario_hora_salida = serializers.TimeField(source='horario.hora_salida', read_only=True)
-    salon = serializers.IntegerField(source='horario.salon', read_only=True)
-    jornada = serializers.CharField(source='horario.jornada', read_only=True)
-    asignatura = serializers.CharField(source='horario.asignatura', read_only=True)
-    nombres_aprendiz = serializers.CharField(source='aprendiz.nombres_aprendiz', read_only=True)
-    apellidos_aprendiz = serializers.CharField(source='aprendiz.apellidos_aprendiz', read_only=True)
+    fecha_asistencia = serializers.DateField()
+    nombres_aprendiz = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')
+    apellidos_aprendiz = serializers.ReadOnlyField(source='aprendiz.apellidos_aprendiz')
 
     class Meta:
         model = Asistencia
-        fields = ['horario_id', 'aprendiz_documento', 'horario_fecha', 'horario_hora_entrada', 'horario_hora_salida',
-                  'salon', 'jornada', 'asignatura', 'nombres_aprendiz', 'apellidos_aprendiz', 'presente']
+        fields = ['id', 'fecha_asistencia', 'nombres_aprendiz', 'apellidos_aprendiz', 'aprendiz', 'presente']
+
+
+
+
+
+

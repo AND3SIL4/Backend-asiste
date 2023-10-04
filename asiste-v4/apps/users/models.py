@@ -1,3 +1,6 @@
+## Archivo encargado de la comunicacion entre la base de datos y el backend
+### Encargado de la estructura del usuario
+
 from django.db import models
 from django.contrib.auth.models import (
     AbstractUser,
@@ -6,7 +9,9 @@ from django.contrib.auth.models import (
 )
 
 
-# Create your models here.
+# * Models here.
+
+
 # Superuser model
 class UserManager(BaseUserManager):
     def create_user(self, document, password, email, user_type, **extra_fields):

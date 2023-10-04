@@ -1,3 +1,5 @@
+## Archivo para facilidad de CRUD en la base de datos mediante el acceso como admin
+
 from django.contrib import admin
 from apps.asistencia.models import (
     Instructor,

@@ -1,3 +1,5 @@
+## Archivo encargado de serizar los datos para facil lectura desde el front
+
 from rest_framework import serializers
 from apps.asistencia.models import (
     Instructor,
@@ -11,6 +13,7 @@ from apps.asistencia.models import (
 )
 
 
+## Serializador datos instructor
 class InstructorSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
 
@@ -29,12 +32,14 @@ class InstructorSerializer(serializers.ModelSerializer):
         }
 
 
+## Serializador datos coordinacion
 class CoordinacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coordinacion
         fields = '__all__'
 
 
+## Serializador datos programa
 class ProgramaSerializer(serializers.ModelSerializer):
     coordinacion_programa = CoordinacionSerializer()
 
@@ -43,12 +48,14 @@ class ProgramaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+## Serializador datos horarios
 class HorarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Horario
         fields = '__all__'
 
 
+## Serializador datos fichas
 class FichaSerializer(serializers.ModelSerializer):
     horario_ficha = HorarioSerializer(many=True)
     instructores = InstructorSerializer(many=True)
@@ -59,6 +66,7 @@ class FichaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+## Serializador datos aprendices
 class AprendizSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
     ficha_details = serializers.SerializerMethodField()
@@ -83,6 +91,7 @@ class AprendizSerializer(serializers.ModelSerializer):
         return FichaSerializer(ficha).data
 
 
+## Serializador datos novedades
 class NovedadSerializer(serializers.ModelSerializer):
     # Campos de solo lectura para mostrar los detalles del usuario y la ficha
     user = serializers.ReadOnlyField(source='aprendiz.user.username')
@@ -96,6 +105,7 @@ class NovedadSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+## Serializador datos asistencias
 class AsistenciaSerializer(serializers.ModelSerializer):
     fecha_asistencia = serializers.DateField()
     nombres_aprendiz = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')

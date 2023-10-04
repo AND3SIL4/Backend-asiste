@@ -1,3 +1,6 @@
+## Archivo encargado de serializar la informacion del usuario en formato JSON
+### Se encagar de facilitar la lectura para el front de los datos devueltos por el back
+
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 
@@ -21,7 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-
+# Token serializer
 class AuthTokenSerializers(serializers.Serializer):
     document = serializers.IntegerField()
     password = serializers.CharField(style={'input_type': 'password'})

@@ -9,7 +9,8 @@ from django.db.models import Q
 from rest_framework.decorators import action
 
 
-# Create your views here.
+# * Archivo de logica de negocio para la app de asistencia
+
 # PERMISOS PARA USUARIOS
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()

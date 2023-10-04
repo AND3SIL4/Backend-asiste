@@ -6,7 +6,7 @@ from apps.users.models import User
 from apps.users.permission import IsAprendizUser
 
 
-# Create your views here.
+# * Archivo para logica de negocios de la app de usuarios
 # VISTA PARA CREAR UN USUARIO
 class CreateUserView(generics.CreateAPIView):
     """Vista para crear un usuario"""

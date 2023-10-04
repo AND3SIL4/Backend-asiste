@@ -1,8 +1,12 @@
+# Arhivo que controla la interaccion de la arquitectura del backend y la base de datos
 from django.db import models
 from apps.users.models import User
 
 
-# Create your models here.
+# Our models here.
+
+
+## Modelo de instructor
 class Instructor(models.Model):
     class Meta:
         verbose_name = "Instructor"
@@ -20,6 +24,7 @@ class Instructor(models.Model):
         return f"{self.nombres_instructor} {self.apellidos_instructor}"
 
 
+## Modelo de coordinacion
 class Coordinacion(models.Model):
     class Meta:
         verbose_name = "Coordinacion"
@@ -32,6 +37,7 @@ class Coordinacion(models.Model):
         return self.nombre_coordinacion
 
 
+## Modelo de programa
 class Programa(models.Model):
     class Meta:
         verbose_name = "Programa"
@@ -50,6 +56,7 @@ class Programa(models.Model):
         return f"{self.nombre_programa}"
 
 
+## modelo de horarios
 class Horario(models.Model):
     class Meta:
         verbose_name = "Horario"
@@ -73,6 +80,7 @@ class Horario(models.Model):
         return f"{self.fecha} - {self.jornada} - {self.salon}"
 
 
+## Modelo de fichas
 class Ficha(models.Model):
     class Meta:
         verbose_name = "Ficha"
@@ -92,6 +100,7 @@ class Ficha(models.Model):
         return f"{self.id_ficha}"
 
 
+## Modelo de aprendices
 class Aprendiz(models.Model):
     GENERO_CHOICES = (
         ("Masculino", "Masculino"),
@@ -125,6 +134,7 @@ class Aprendiz(models.Model):
         return f"{self.nombres_aprendiz} {self.apellidos_aprendiz}"
 
 
+## Modelo de asistencias
 class Asistencia(models.Model):
     class Meta:
         verbose_name = "Asistencia"
@@ -144,6 +154,7 @@ class Asistencia(models.Model):
         return f"{self.fecha_asistencia} - {self.aprendiz.nombres_aprendiz}"
 
 
+## Modelo de novedades
 class Novedad(models.Model):
     ESTADO_NOVEDAD_CHOICES = (
         (True, 'Aceptada'),

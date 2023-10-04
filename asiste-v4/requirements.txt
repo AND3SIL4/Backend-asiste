@@ -1,0 +1,1 @@
+django-environ==0.11.2 # para manipular y protejer las variables de entorno

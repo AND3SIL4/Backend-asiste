@@ -1,7 +1,4 @@
-# Install mysql on your computer 
-# pip install mysql
-# pip install mysql-connector
-# pip install mysql-connector-python
+# Script para crear la base de datos
 
 import mysql.connector
 

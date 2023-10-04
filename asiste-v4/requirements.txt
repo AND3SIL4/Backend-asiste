@@ -1,1 +1,20 @@
+# * Archivo que controla las versiones de librerias utilizadas en el proyecto
+
+django==4.2.5 # libreria principal del proyecto
+djangorestframework==3.14.0 # para hacer API's
+pillow==10.0.0 # control y trabajo de imagenes
+django-ckeditor==6.6.1 # Para crear contenido mas dinamico
 django-environ==0.11.2 # para manipular y protejer las variables de entorno
+mysql==0.0.3 # trabajar con bases de datos mysql
+mysql-connector==2.2.9 # conector para bases de datos mysql
+mysql-connector-python==8.1.0 # conector de python para bases de datos mysql
+drf-spectacular==0.26.5 # ! No me acuerdo que hace :v
+
+# Crear entorno virtual
+# virtualenv nuevo_entorno_virtual
+
+# Activar entorno virtual
+# .\nuevo_entorno_virtual\Scripts\activate
+
+# Ejecutar script para instalar las librerias
+# pip install -r requirements.txt

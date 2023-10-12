@@ -62,7 +62,8 @@ python ./manage.py migrate
 python ./manage.py createsuperuser
 
 # Ejecutar el servidor backend
-python ./manage.py runserver 0:8080 # utilice el puerto de su preferencia 
+python ./manage.py runserver 0:8080 # utilice el puerto de su preferencia
+```
 
 ## Contribuciones
 

@@ -120,7 +120,8 @@ class Aprendiz(models.Model):
     )
     TIPO_DOCUMENTO_CHOICES = (
         ('CC', 'Cedula de ciudadanía'),
-        ('TI', 'Tarjeta de identidad')
+        ('TI', 'Tarjeta de identidad'),
+        ('PEP', 'PEP')
     )
 
     documento_aprendiz = models.IntegerField(primary_key=True)
@@ -129,7 +130,7 @@ class Aprendiz(models.Model):
     apellidos_aprendiz = models.CharField(max_length=45)
     email_personal_aprendiz = models.CharField(max_length=45)
     email_institucional_aprendiz = models.CharField(max_length=45)
-    numero_celular = models.IntegerField()
+    numero_celular = models.BigIntegerField()
     genero_aprendiz = models.CharField(max_length=10, choices=GENERO_CHOICES)
     ficha_aprendiz = models.ForeignKey(Ficha, on_delete=models.CASCADE)
     user = models.OneToOneField(User, related_name='aprendiz', on_delete=models.DO_NOTHING)

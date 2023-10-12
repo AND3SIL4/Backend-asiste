@@ -31,6 +31,10 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('username', 'ADMINISTRADOR')
+        extra_fields.setdefault('first_name', 'ASISTENTE')
+        extra_fields.setdefault('last_name', 'COORDINACION')
+
+
 
         return self.create_user(document, password, email, user_type='SUPERUSER', **extra_fields)
 
@@ -55,4 +59,4 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = 'document'
 
     def __str__(self):
-        return f'{self.first_name} - {self.last_name} - {self.username} - {self.user_type}'
+        return f'{self.first_name} {self.last_name} - {self.username} - {self.user_type}'

@@ -63,3 +63,23 @@ python ./manage.py createsuperuser
 
 # Ejecutar el servidor backend
 python ./manage.py runserver 0:8080 # utilice el puerto de su preferencia 
+
+## Contribuciones
+
+¡Apreciamos las contribuciones de la comunidad! Si deseas contribuir a este proyecto, sigue estos pasos:
+
+1. Realiza un fork del repositorio.
+2. Crea una rama para tu contribución: `git checkout -b feature/nueva-funcionalidad`.
+3. Realiza tus cambios y documenta cualquier actualización.
+4. Realiza un pull request y describe tus cambios en detalle.
+
+## Contacto
+
+Si tienes alguna pregunta o necesitas más información, no dudes en ponerte en contacto con el equipo de desarrollo:
+
+- Nombre: Andres Felipe Silva
+- Correo electrónico: afsilva6236@soy.sena.edu.co
+
+---
+
+Esperamos que este proyecto sea de utilidad para la comunidad del SENA en Bogotá, Colombia, en 2023. ¡Gracias por tu interés y contribuciones!

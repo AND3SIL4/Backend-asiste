@@ -57,7 +57,7 @@ class Programa(models.Model):
 
 
 ## modelo de horarios
-class Horario(models.Model):
+class HorarioPorDia(models.Model):
     class Meta:
         verbose_name = "Horario"
         verbose_name_plural = "Horarios"
@@ -67,9 +67,18 @@ class Horario(models.Model):
         ('TARDE', 'Tarde'),
         ('NOCTURNA', 'Nocturna')
     )
+    DIAS_CHOICES = (
+        ('LUNES', 'Lunes'),
+        ('MARTES', 'Martes'),
+        ('MIERCOLES', 'Miercoles'),
+        ('JUEVES', 'Jueves'),
+        ('VIERNES', 'Viernes'),
+        ('SABADO', 'Sabado'),
+        ('DOMINGO', 'Domingo'),
+    )
 
     horario_id = models.IntegerField(primary_key=True, unique=True)
-    fecha = models.DateField()
+    dia = models.CharField(max_length=45, choices=DIAS_CHOICES)
     hora_entrada = models.TimeField()
     hora_salida = models.TimeField()
     salon = models.IntegerField()
@@ -77,7 +86,7 @@ class Horario(models.Model):
     asignatura = models.CharField(max_length=45)
 
     def __str__(self):
-        return f"{self.fecha} - {self.jornada} - {self.salon}"
+        return f"{self.dia} - {self.jornada} - {self.salon} - {self.asignatura}"
 
 
 ## Modelo de fichas
@@ -91,7 +100,7 @@ class Ficha(models.Model):
         ('COMPLEMENTARIO', 'Complementario'),
     )
     id_ficha = models.IntegerField(primary_key=True)
-    horario_ficha = models.ManyToManyField(Horario)
+    horario_ficha = models.ManyToManyField(HorarioPorDia)
     instructores = models.ManyToManyField(Instructor)
     nivel_formacion = models.CharField(max_length=20, choices=NIVEL_FORMACION_CHOICES)
     programa_ficha = models.ForeignKey(Programa, on_delete=models.CASCADE)

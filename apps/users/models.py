@@ -43,7 +43,7 @@ class User(AbstractUser, PermissionsMixin):
         ('COORDINACION', 'Coordinacion'),
         ('BIENESTAR', 'Bienestar'),
     )
-    document = models.IntegerField(primary_key=True, unique=True)
+    document = models.BigIntegerField(primary_key=True, unique=True)
     username = models.CharField(max_length=45)
     email = models.EmailField(max_length=100, unique=True)
     user_type = models.CharField(max_length=45, choices=USER_TYPE_CHOICES)
@@ -55,4 +55,4 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = 'document'
 
     def __str__(self):
-        return self.username
+        return f'{self.first_name} - {self.last_name} - {self.username} - {self.user_type}'

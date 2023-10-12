@@ -5,7 +5,7 @@ from apps.asistencia.models import (
     Instructor,
     Coordinacion,
     Programa,
-    Horario,
+    HorarioPorDia,
     Ficha,
     Aprendiz,
     Novedad,
@@ -51,7 +51,7 @@ class ProgramaSerializer(serializers.ModelSerializer):
 ## Serializador datos horarios
 class HorarioSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Horario
+        model = HorarioPorDia
         fields = '__all__'
 
 

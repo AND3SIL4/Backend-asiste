@@ -2,7 +2,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from apps.users.permission import IsAprendizUser, IsInstructorUser, IsCoordinacionUser, IsBienestarUser
-from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, Horario, Ficha
+from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, HorarioPorDia, Ficha
 from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer, InstructorSerializer
 from rest_framework.views import Response, status
 from django.db.models import Q
@@ -196,8 +196,8 @@ class InstructorViewSet(ModelViewSet):
             return Response({'error': 'Ficha no existe'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            horario = Horario.objects.get(horario_id=horario_id)
-        except Horario.DoesNotExist:
+            HorarioPorDia = HorarioPorDia.objects.get(horario_id=horario_id)
+        except HorarioPorDia.DoesNotExist:
             return Response({'error': 'Horario no existe'}, status=status.HTTP_404_NOT_FOUND)
 
         # Verificar si el aprendiz asociado a la asistencia pertenece a la ficha de este instructor

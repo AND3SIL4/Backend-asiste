@@ -6,7 +6,7 @@ from apps.asistencia.models import (
     Coordinacion,
     Asistencia,
     Programa,
-    Horario,
+    HorarioPorDia,
     Ficha,
     Aprendiz,
     Novedad,
@@ -49,8 +49,8 @@ class ProgramaAdmin(admin.ModelAdmin):
 
 # Admin para el modelo Horario
 class HorarioAdmin(admin.ModelAdmin):
-    list_display = ("fecha", "hora_entrada", "hora_salida", "salon", "jornada")
-    list_display_links = ("fecha", "hora_entrada", "hora_salida", "salon", "jornada")
+    list_display = ("dia", "hora_entrada", "hora_salida", "salon", "jornada")
+    list_display_links = ("dia", "hora_entrada", "hora_salida", "salon", "jornada")
 
 
 # Admin para el modelo Ficha
@@ -105,7 +105,7 @@ admin.site.register(Instructor, InstructorAdmin)
 admin.site.register(Coordinacion, CoordinacionAdmin)
 admin.site.register(Asistencia, AsistenciaAdmin)
 admin.site.register(Programa, ProgramaAdmin)
-admin.site.register(Horario, HorarioAdmin)
+admin.site.register(HorarioPorDia, HorarioAdmin)
 admin.site.register(Ficha, FichaAdmin)
 admin.site.register(Aprendiz, AprendizAdmin)
 

@@ -40,7 +40,26 @@ Para configurar el entorno de desarrollo, se requiere tener Python y pip instala
 virtualenv virt
 
 # Activar el entorno virtual
-./virt/bin/activate  # En Windows: venv\Scripts\activate
+./virt/bin/activate # En windows
 
 # Instalar las dependencias
 pip install -r requirements.txt
+
+# Crear base de datos ejecutando python script
+pyhon db.py
+
+# Despues de crear base de datos
+## configurar el archivo settings.py en el root del proyecto
+### actualizar parametros para conexion con la base de datos (user, password, host, port)
+
+# Crear migraciones
+python ./manage.py makemigrations
+
+# Migrar estructura a base de datos
+python ./manage.py migrate
+
+# Crear superuser
+python ./manage.py createsuperuser
+
+# Ejecutar el servidor backend
+python ./manage.py runserver 0:8080 # utilice el puerto de su preferencia 

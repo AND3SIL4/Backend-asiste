@@ -5,6 +5,9 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from apps.users.models import User
 from apps.users.permission import IsAprendizUser
 
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+
 
 # * Archivo para logica de negocios de la app de usuarios
 # VISTA PARA CREAR UN USUARIO
@@ -28,3 +31,17 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
 class CreateTokenView(ObtainAuthToken):
     """Vista para crear un token"""
     serializer_class = AuthTokenSerializers
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        # Obtén el tipo de usuario y agrega al diccionario de respuesta
+        user_type = user.user_type
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'token': token.key,
+            'user_type': user_type  # Agrega el tipo de usuario a la respuesta
+        })

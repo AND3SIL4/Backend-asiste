@@ -1,16 +1,27 @@
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from apps.users.permission import IsAprendizUser, IsInstructorUser, IsCoordinacionUser, IsBienestarUser
-from apps.asistencia.models import Novedad, Aprendiz, Asistencia, Instructor, HorarioPorDia, Ficha
-from apps.asistencia.serializers import NovedadSerializer, AprendizSerializer, AsistenciaSerializer, InstructorSerializer
+from apps.users.permission import IsAprendizUser, IsInstructorUser
+from apps.asistencia.models import (
+    Novedad,
+    Aprendiz,
+    Asistencia,
+    Instructor,
+    HorarioPorDia,
+    Ficha,
+)
+from apps.asistencia.serializers import (
+    NovedadSerializer,
+    AprendizSerializer,
+    AsistenciaSerializer,
+    InstructorSerializer,
+)
 from rest_framework.views import Response, status
 from django.db.models import Q
 from rest_framework.decorators import action
 
 
-# * Archivo de logica de negocio para la app de asistencia
-
+# ARCHIVO CON LA LOGICA DE NEGOCIOS PARA LA APP DE REGISTRO DE ASISTENCIA
 # PERMISOS PARA USUARIOS
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()
@@ -28,13 +39,12 @@ class NovedadListView(ModelViewSet):
         # Instructor: puede ver novedades y actualizar datos de asistencia de sus aprendices
         if IsInstructorUser().has_permission(self.request, self):
             return self.queryset.filter(
-                Q(aprendiz__ficha_aprendiz__instructores__user=user) |
-                Q(aprendiz__ficha_aprendiz__instructores__user__instructor__user=user)
+                Q(aprendiz__ficha_aprendiz__instructores__user=user)
+                | Q(aprendiz__ficha_aprendiz__instructores__user__instructor__user=user)
             )
 
-        # Coordinación y Bienestar: pueden editar novedades
-        if IsBienestarUser().has_permission(self.request, self) or IsCoordinacionUser().has_permission(self.request,
-                                                                                                       self):
+        # instructores pueden editar novedades
+        if IsInstructorUser().has_permission(self.request, self):
             return self.queryset
 
         # Si no es ninguno de los roles anteriores, no se permite el acceso
@@ -47,7 +57,7 @@ class NovedadListView(ModelViewSet):
         if IsAprendizUser().has_permission(self.request, self):
             serializer.save(aprendiz__user=user)
         else:
-            # Instructor, Coordinación y Bienestar, permiten vincular la novedad con cualquier aprendiz
+            # Instructor, permiten vincular la novedad con cualquier aprendiz
             serializer.save()
 
 
@@ -99,32 +109,35 @@ class NovedadAprendizView(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Novedad.objects.filter(aprendiz__ficha_aprendiz__instructor_ficha__user=user)
+        return Novedad.objects.filter(
+            aprendiz__ficha_aprendiz__instructor_ficha__user=user
+        )
 
 
 # MODIFICAR NOVEDADES PARA SU ACEPTACIÓN
 class NovedadAcceptanceView(ModelViewSet):
     queryset = Novedad.objects.all()
     serializer_class = NovedadSerializer
-    permission_classes = [IsAuthenticated, IsCoordinacionUser | IsBienestarUser]
+    permission_classes = [IsAuthenticated, IsInstructorUser]
     authentication_classes = [TokenAuthentication]
 
     def get_permissions(self):
         # Asignar el permiso adecuado según el tipo de usuario
         if self.request.user.is_authenticated:
-            if self.request.user.user_type == 'COORDINACION':
-                return [IsCoordinacionUser()]
-            elif self.request.user.user_type == 'BIENESTAR':
-                return [IsBienestarUser()]
+            if self.request.user.user_type == "INSTRUCTOR":
+                return [IsInstructorUser()]
             else:
                 return []
         else:
             return []
 
     def update(self, request, *args, **kwargs):
-        # Solo permitir actualización si el usuario es Coordinación o Bienestar
-        if not (request.user.user_type == 'COORDINACION' or request.user.user_type == 'BIENESTAR'):
-            return Response({'error': 'No tienes permiso para realizar esta acción.'}, status=status.HTTP_403_FORBIDDEN)
+        # Solo permitir actualización si el usuario es INSTRUCTOR
+        if not (request.user.user_type == "INSTRUCTOR"):
+            return Response(
+                {"error": "No tienes permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # Procesar la actualización como de costumbre
         return super().update(request, *args, **kwargs)
@@ -136,7 +149,7 @@ class InstructorViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsInstructorUser]
     authentication_classes = [TokenAuthentication]
 
-    @action(detail=True, methods=['PATCH'])
+    @action(detail=True, methods=["PATCH"])
     def get_queryset(self):
         # Obtener el instructor asociado al usuario que ha iniciado sesión
         instructor = self.request.user.instructor
@@ -144,7 +157,7 @@ class InstructorViewSet(ModelViewSet):
         # Devolver solo el instructor asociado al usuario actual
         return Instructor.objects.filter(documento=instructor.documento)
 
-    @action(detail=True, methods=['PATCH'])
+    @action(detail=True, methods=["PATCH"])
     def update_instructor(self, request, pk=None):
         # Obtener el instructor asociado al usuario que ha iniciado sesión
         instructor = self.request.user.instructor
@@ -164,7 +177,7 @@ class InstructorViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['GET'])
+    @action(detail=True, methods=["GET"])
     def lista_aprendices(self, request, pk=None):
         instructor = self.get_object()
         aprendices = Aprendiz.objects.filter(ficha_aprendiz__instructores=instructor)
@@ -174,53 +187,74 @@ class InstructorViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @action(detail=True, methods=['POST', 'GET'])
+    @action(detail=True, methods=["POST", "GET"])
     def registrar_asistencia(self, request, pk=None):
         instructor = self.get_object()
         data = request.data
 
         # Asegurarse de que el usuario actual sea un Instructor y esté relacionado con este Instructor específico
-        if not (request.user.user_type == 'INSTRUCTOR' and instructor.user == request.user):
-            return Response({'error': 'No tienes permiso para registrar asistencia para este instructor.'},status=status.HTTP_403_FORBIDDEN)
+        if not (
+            request.user.user_type == "INSTRUCTOR" and instructor.user == request.user
+        ):
+            return Response(
+                {
+                    "error": "No tienes permiso para registrar asistencia para este instructor."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # Obtener la ficha y el horario asociado a la asistencia
-        id_ficha = data.get('ficha_id')
-        horario_id = data.get('horario_id')
-        documento_aprendiz = data.get('documento_aprendiz')
-        nombres_aprendiz = data.get('nombres_aprendiz')
-        apellidos_aprendiz = data.get('apellidos_aprendiz')
+        id_ficha = data.get("ficha_id")
+        horario_id = data.get("horario_id")
+        documento_aprendiz = data.get("documento_aprendiz")
+        nombres_aprendiz = data.get("nombres_aprendiz")
+        apellidos_aprendiz = data.get("apellidos_aprendiz")
 
         try:
             ficha = Ficha.objects.get(id_ficha=id_ficha)
         except Ficha.DoesNotExist:
-            return Response({'error': 'Ficha no existe'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Ficha no encontrada"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         try:
             HorarioPorDia = HorarioPorDia.objects.get(horario_id=horario_id)
         except HorarioPorDia.DoesNotExist:
-            return Response({'error': 'Horario no existe'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Horario no existe"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Verificar si el aprendiz asociado a la asistencia pertenece a la ficha de este instructor
         try:
-            aprendiz_data = data.get('aprendiz', {})
+            aprendiz_data = data.get("aprendiz", {})
             if not isinstance(aprendiz_data, dict):
-                return Response({'error': 'Datos del aprendiz no proporcionados o en un formato incorrecto.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "error": "Datos del aprendiz no proporcionados o en un formato incorrecto."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            documento_aprendiz = aprendiz_data.get('documento_aprendiz')
+            documento_aprendiz = aprendiz_data.get("documento_aprendiz")
             if documento_aprendiz is None:
-                return Response({'error': 'Documento del aprendiz no proporcionado.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Documento del aprendiz no proporcionado."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            aprendiz = Aprendiz.objects.get(documento_aprendiz=documento_aprendiz, ficha_aprendiz=ficha)
+            aprendiz = Aprendiz.objects.get(
+                documento_aprendiz=documento_aprendiz, ficha_aprendiz=ficha
+            )
         except Aprendiz.DoesNotExist:
-            return Response({'error': 'Aprendiz no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Aprendiz no existe."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Crear la asistencia
         asistencia_data = {
-            'aprendiz': aprendiz.pk,
-            'fecha_asistencia': data.get('fecha_asistencia'),
-            'presente': data.get('presente')
+            "aprendiz": aprendiz.pk,
+            "fecha_asistencia": data.get("fecha_asistencia"),
+            "presente": data.get("presente"),
         }
 
         asistencia_serializer = AsistenciaSerializer(data=asistencia_data)
@@ -229,6 +263,6 @@ class InstructorViewSet(ModelViewSet):
             asistencia_serializer.save()
             return Response(asistencia_serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(asistencia_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+        return Response(
+            asistencia_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )

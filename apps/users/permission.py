@@ -1,5 +1,4 @@
 ## Archivo que se encarga de los permisos segun roles de usuarios
-
 from rest_framework import permissions
 
 
@@ -23,14 +22,3 @@ class IsInstructorUser(IsUserType):
     def __init__(self):
         super().__init__(allowed_types=['INSTRUCTOR'])
 
-
-# Dependiendo si es coordinacion
-class IsCoordinacionUser(IsUserType):
-    def __init__(self):
-        super().__init__(allowed_types=['COORDINACION'])
-
-
-# Dependiendo si es bienestar del aprendiz
-class IsBienestarUser(IsUserType):
-    def __init__(self):
-        super().__init__(allowed_types=['BIENESTAR'])

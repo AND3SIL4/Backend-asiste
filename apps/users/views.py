@@ -1,10 +1,7 @@
-from django.shortcuts import render
 from rest_framework import generics, authentication, permissions
 from apps.users.serializers import UserSerializer, AuthTokenSerializers
 from rest_framework.authtoken.views import ObtainAuthToken
-from apps.users.models import User
-from apps.users.permission import IsAprendizUser
-
+from apps.users.permission import IsAprendizUser, IsInstructorUser
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
@@ -21,7 +18,7 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
     """Vista para GET, PUT, PATCH de usuario"""
     serializer_class = UserSerializer
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated, IsAprendizUser]
+    permission_classes = [permissions.IsAuthenticated, IsAprendizUser, IsInstructorUser]
 
     def get_object(self):
         return self.request.user

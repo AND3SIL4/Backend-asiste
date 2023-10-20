@@ -9,7 +9,8 @@ mysql==0.0.3 # trabajar con bases de datos mysql
 mysql-connector==2.2.9 # conector para bases de datos mysql
 mysql-connector-python==8.1.0 # conector de python para bases de datos mysql
 drf-spectacular==0.26.5 # ! No me acuerdo que hace :v
-cors==1.0.1
+django-cors-headers==4.3.0 # Libreria para habilitar el cors en el servidor
+
 
 # Crear entorno virtual
 # virtualenv nuevo_entorno_virtual

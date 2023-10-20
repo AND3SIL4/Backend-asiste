@@ -45,6 +45,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "rest_framework",
     "drf_spectacular",
+    "corsheaders"
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -66,12 +67,16 @@ CKEDITOR_UPLOAD_PATH = '/media/'
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS = env.list("CORS_ORIGIN_WHITELIST_DEV")
+# CORS_ALLOW_METHODS, CORS_ALLOW_HEADERS, etc.
 
 ROOT_URLCONF = "project.urls"
 

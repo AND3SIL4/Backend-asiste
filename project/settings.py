@@ -78,6 +78,16 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = env.list("CORS_ORIGIN_WHITELIST_DEV")
 # CORS_ALLOW_METHODS, CORS_ALLOW_HEADERS, etc.
 
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',  
+    'POST',
+    'PUT',
+]
+
+
 ROOT_URLCONF = "project.urls"
 
 TEMPLATES = [

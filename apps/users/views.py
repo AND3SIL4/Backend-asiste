@@ -18,11 +18,10 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
     """Vista para GET, PUT, PATCH de usuario"""
     serializer_class = UserSerializer
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated, IsAprendizUser, IsInstructorUser]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
-
 
 # VISTA PARA CREAR UN TOKEN DE AUTHENTICATION
 class CreateTokenView(ObtainAuthToken):

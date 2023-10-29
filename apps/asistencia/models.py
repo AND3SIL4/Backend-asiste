@@ -5,25 +5,6 @@ from apps.users.models import User
 
 # Our models here.
 
-
-## Modelo de instructor
-class Instructor(models.Model):
-    class Meta:
-        verbose_name = "Instructor"
-        verbose_name_plural = "Instructores"
-
-    documento = models.IntegerField(primary_key=True)
-    nombres_instructor = models.CharField(max_length=45)
-    apellidos_instructor = models.CharField(max_length=45)
-    email_institucional = models.CharField(max_length=50)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
-    registro_asistencia = models.ManyToManyField('Asistencia', blank=True)
-
-
-    def __str__(self):
-        return f"{self.nombres_instructor} {self.apellidos_instructor}"
-
-
 ## Modelo de coordinacion
 class Coordinacion(models.Model):
     class Meta:
@@ -101,12 +82,31 @@ class Ficha(models.Model):
     )
     id_ficha = models.IntegerField(primary_key=True)
     horario_ficha = models.ManyToManyField(HorarioPorDia)
-    instructores = models.ManyToManyField(Instructor)
+    # instructores = models.ManyToManyField(Instructor)
     nivel_formacion = models.CharField(max_length=20, choices=NIVEL_FORMACION_CHOICES)
     programa_ficha = models.ForeignKey(Programa, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.id_ficha}"
+
+
+## Modelo de instructor
+class Instructor(models.Model):
+    class Meta:
+        verbose_name = "Instructor"
+        verbose_name_plural = "Instructores"
+
+    documento = models.IntegerField(primary_key=True)
+    nombres_instructor = models.CharField(max_length=45)
+    apellidos_instructor = models.CharField(max_length=45)
+    email_institucional = models.CharField(max_length=50)
+    fichas = models.ManyToManyField(Ficha)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
+    registro_asistencia = models.ManyToManyField('Asistencia', blank=True)
+
+
+    def __str__(self):
+        return f"{self.nombres_instructor} {self.apellidos_instructor}"
 
 
 ## Modelo de aprendices

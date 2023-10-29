@@ -15,6 +15,7 @@ from apps.asistencia.serializers import (
     AprendizSerializer,
     AsistenciaSerializer,
     InstructorSerializer,
+    FichaSerializer,
 )
 from rest_framework.views import Response, status
 from django.db.models import Q
@@ -23,6 +24,44 @@ from rest_framework.decorators import action
 
 # ARCHIVO CON LA LOGICA DE NEGOCIOS PARA LA APP DE REGISTRO DE ASISTENCIA
 # PERMISOS PARA USUARIOS
+#     queryset = Novedad.objects.all()
+#     serializer_class = NovedadSerializer
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [TokenAuthentication]
+
+#     def get_queryset(self):
+#         user = self.request.user
+
+#         # Aprendiz: puede ver sus propias novedades y datos de asistencia
+#         if IsAprendizUser().has_permission(self.request, self):
+#             return self.queryset.filter(aprendiz__user=user.document)
+
+#         # Instructor: puede ver novedades y actualizar datos de asistencia de sus aprendices
+#         if IsInstructorUser().has_permission(self.request, self):
+#             return self.queryset.filter(
+#                 Q(aprendiz__ficha_aprendiz__instructores__documento=user.document)
+#                 | Q(
+#                     aprendiz__ficha_aprendiz__instructores__instructor__documento=user.document
+#                 )
+#             )
+
+#         # instructores pueden editar novedades
+#         if IsInstructorUser().has_permission(self.request, self):
+#             return self.queryset
+
+#         # Si no es ninguno de los roles anteriores, no se permite el acceso
+#         return Novedad.objects.none()
+
+#     def perform_create(self, serializer):
+#         user = self.request.user
+
+#         # Aprendiz: vincula la novedad con su perfil
+#         if IsAprendizUser().has_permission(self.request, self):
+#             serializer.save(aprendiz__user=user)
+#         else:
+#             # Instructor, permiten vincular la novedad con cualquier aprendiz
+#             serializer.save()
+
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()
     serializer_class = NovedadSerializer
@@ -32,33 +71,18 @@ class NovedadListView(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # Aprendiz: puede ver sus propias novedades y datos de asistencia
         if IsAprendizUser().has_permission(self.request, self):
-            return self.queryset.filter(aprendiz__user=user.document)
+            # Aprendiz: puede ver sus propias novedades
+            return self.queryset.filter(aprendiz__user=user)
 
-        # Instructor: puede ver novedades y actualizar datos de asistencia de sus aprendices
         if IsInstructorUser().has_permission(self.request, self):
-            return self.queryset.filter(
-                Q(aprendiz__ficha_aprendiz__instructores__user=user)
-                | Q(aprendiz__ficha_aprendiz__instructores__user__instructor__user=user)
-            )
-
-        # instructores pueden editar novedades
-        if IsInstructorUser().has_permission(self.request, self):
-            return self.queryset
+            # Instructor: puede ver novedades relacionadas con sus fichas
+            fichas_del_instructor = Ficha.objects.filter(instructor__documento=user.document)
+            return self.queryset.filter(aprendiz__ficha_aprendiz__in=fichas_del_instructor)
 
         # Si no es ninguno de los roles anteriores, no se permite el acceso
         return Novedad.objects.none()
 
-    def perform_create(self, serializer):
-        user = self.request.user
-
-        # Aprendiz: vincula la novedad con su perfil
-        if IsAprendizUser().has_permission(self.request, self):
-            serializer.save(aprendiz__user=user)
-        else:
-            # Instructor, permiten vincular la novedad con cualquier aprendiz
-            serializer.save()
 
 
 # ACTUALIZAR DATOS DE APRENDIZ
@@ -109,8 +133,12 @@ class NovedadAprendizView(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        # Obtén al instructor relacionado con el usuario actual
+        instructor = Instructor.objects.get(user=user)
+        # Filtra las novedades por las fichas relacionadas con el instructor
+        fichas_del_instructor = instructor.fichas.all()
         return Novedad.objects.filter(
-            aprendiz__ficha_aprendiz__instructor_ficha__user=user
+            aprendiz__ficha_aprendiz__in=fichas_del_instructor
         )
 
 
@@ -149,6 +177,13 @@ class InstructorViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsInstructorUser]
     authentication_classes = [TokenAuthentication]
 
+    @action(detail=True, methods=["GET"])
+    def get_fichas(self, request, pk=None):
+        instructor = self.get_object()
+        fichas = instructor.fichas.all()
+        fichas_serializer = FichaSerializer(fichas, many=True)
+        return Response(fichas_serializer.data)
+
     @action(detail=True, methods=["PATCH"])
     def get_queryset(self):
         # Obtener el instructor asociado al usuario que ha iniciado sesión
@@ -180,7 +215,8 @@ class InstructorViewSet(ModelViewSet):
     @action(detail=True, methods=["GET"])
     def lista_aprendices(self, request, pk=None):
         instructor = self.get_object()
-        aprendices = Aprendiz.objects.filter(ficha_aprendiz__instructores=instructor)
+        fichas_del_instructor = instructor.fichas.all()
+        aprendices = Aprendiz.objects.filter(ficha_aprendiz__in=fichas_del_instructor)
         serializer = AprendizSerializer(aprendices, many=True)
         return Response(serializer.data)
 

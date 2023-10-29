@@ -13,24 +13,6 @@ from apps.asistencia.models import (
 )
 
 
-## Serializador datos instructor
-class InstructorSerializer(serializers.ModelSerializer):
-    user_details = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Instructor
-        fields = '__all__'
-
-    # Método para obtener los detalles del usuario relacionado
-    def get_user_details(self, instructor):
-        user = instructor.user
-        return {
-            'document': user.document,
-            'username': user.username,
-            'email': user.email,
-            'user_type': user.user_type
-        }
-
 
 ## Serializador datos coordinacion
 class CoordinacionSerializer(serializers.ModelSerializer):
@@ -58,12 +40,34 @@ class HorarioSerializer(serializers.ModelSerializer):
 ## Serializador datos fichas
 class FichaSerializer(serializers.ModelSerializer):
     horario_ficha = HorarioSerializer(many=True)
-    instructores = InstructorSerializer(many=True)
+    # instructores = InstructorSerializer(many=True)
     programa_ficha = ProgramaSerializer()
 
     class Meta:
         model = Ficha
         fields = '__all__'
+
+
+
+## Serializador datos instructor
+class InstructorSerializer(serializers.ModelSerializer):
+    user_details = serializers.SerializerMethodField()
+    fichas = FichaSerializer(many=True)
+
+    class Meta:
+        model = Instructor
+        fields = '__all__'
+
+    # Método para obtener los detalles del usuario relacionado
+    def get_user_details(self, instructor):
+        user = instructor.user
+        return {
+            'document': user.document,
+            'username': user.username,
+            'email': user.email,
+            'user_type': user.user_type
+        }
+
 
 
 ## Serializador datos aprendices

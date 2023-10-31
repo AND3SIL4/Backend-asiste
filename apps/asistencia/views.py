@@ -7,8 +7,8 @@ from apps.asistencia.models import (
     Aprendiz,
     Asistencia,
     Instructor,
-    HorarioPorDia,
     Ficha,
+    HorarioPorDia,
 )
 from apps.asistencia.serializers import (
     NovedadSerializer,
@@ -62,6 +62,7 @@ from rest_framework.decorators import action
 #             # Instructor, permiten vincular la novedad con cualquier aprendiz
 #             serializer.save()
 
+
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()
     serializer_class = NovedadSerializer
@@ -77,12 +78,15 @@ class NovedadListView(ModelViewSet):
 
         if IsInstructorUser().has_permission(self.request, self):
             # Instructor: puede ver novedades relacionadas con sus fichas
-            fichas_del_instructor = Ficha.objects.filter(instructor__documento=user.document)
-            return self.queryset.filter(aprendiz__ficha_aprendiz__in=fichas_del_instructor)
+            fichas_del_instructor = Ficha.objects.filter(
+                instructor__documento=user.document
+            )
+            return self.queryset.filter(
+                aprendiz__ficha_aprendiz__in=fichas_del_instructor
+            )
 
         # Si no es ninguno de los roles anteriores, no se permite el acceso
         return Novedad.objects.none()
-
 
 
 # ACTUALIZAR DATOS DE APRENDIZ
@@ -223,7 +227,7 @@ class InstructorViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @action(detail=True, methods=["POST", "GET"])
+    @action(detail=True, methods=["POST"])
     def registrar_asistencia(self, request, pk=None):
         instructor = self.get_object()
         data = request.data
@@ -254,7 +258,7 @@ class InstructorViewSet(ModelViewSet):
             )
 
         try:
-            HorarioPorDia = HorarioPorDia.objects.get(horario_id=horario_id)
+            horario = HorarioPorDia.objects.get(horario_id=horario_id)
         except HorarioPorDia.DoesNotExist:
             return Response(
                 {"error": "Horario no existe"}, status=status.HTTP_404_NOT_FOUND
@@ -289,7 +293,7 @@ class InstructorViewSet(ModelViewSet):
         # Crear la asistencia
         asistencia_data = {
             "aprendiz": aprendiz.pk,
-            "fecha_asistencia": data.get("fecha_asistencia"),
+            # "fecha_asistencia": data.get("fecha_asistencia"),
             "presente": data.get("presente"),
         }
 

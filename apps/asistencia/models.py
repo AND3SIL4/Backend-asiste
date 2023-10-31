@@ -148,10 +148,11 @@ class Asistencia(models.Model):
     ESTADO_ASISTENCIA_CHOICES = (
         ('Asiste', 'Asiste'),
         ('Falla', 'Falla'),
+        ('Retardo', 'Retardo'),
         ('Novedad', 'Novedad'),
     )
     # horario = models.ManyToManyField(Horario, blank=False, null=False)
-    fecha_asistencia = models.DateField(auto_now_add=True)
+    fecha_asistencia = models.DateField(auto_now=True)
     aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
     presente = models.CharField(max_length=45, choices=ESTADO_ASISTENCIA_CHOICES,default=False, blank=False, null=False)
 

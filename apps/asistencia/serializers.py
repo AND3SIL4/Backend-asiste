@@ -111,16 +111,11 @@ class NovedadSerializer(serializers.ModelSerializer):
 
 ## Serializador datos asistencias
 class AsistenciaSerializer(serializers.ModelSerializer):
-    fecha_asistencia = serializers.DateField()
+    # fecha_asistencia = serializers.DateField()
     nombres_aprendiz = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')
     apellidos_aprendiz = serializers.ReadOnlyField(source='aprendiz.apellidos_aprendiz')
 
     class Meta:
         model = Asistencia
         fields = ['id', 'fecha_asistencia', 'nombres_aprendiz', 'apellidos_aprendiz', 'aprendiz', 'presente']
-
-
-
-
-
-
+        read_only_fields = ['fecha_asistencia']

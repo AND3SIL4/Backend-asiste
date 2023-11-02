@@ -293,7 +293,7 @@ class InstructorViewSet(ModelViewSet):
         # Crear la asistencia
         asistencia_data = {
             "aprendiz": aprendiz.pk,
-            # "fecha_asistencia": data.get("fecha_asistencia"),
+            "fecha_asistencia": data.get("fecha_asistencia"),
             "presente": data.get("presente"),
         }
 

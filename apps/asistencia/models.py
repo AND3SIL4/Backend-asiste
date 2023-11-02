@@ -152,7 +152,7 @@ class Asistencia(models.Model):
         ('Novedad', 'Novedad'),
     )
     # horario = models.ManyToManyField(Horario, blank=False, null=False)
-    fecha_asistencia = models.DateField(auto_now=True)
+    fecha_asistencia = models.DateField()
     aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
     presente = models.CharField(max_length=45, choices=ESTADO_ASISTENCIA_CHOICES,default=False, blank=False, null=False)
 

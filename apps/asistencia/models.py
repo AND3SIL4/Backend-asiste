@@ -25,7 +25,7 @@ class Programa(models.Model):
         verbose_name_plural = "Programas"
 
     id_programa = models.IntegerField(primary_key=True)
-    nombre_programa = models.CharField(max_length=45)
+    nombre_programa = models.CharField(max_length=100)
     coordinacion_programa = models.ForeignKey(Coordinacion, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -175,9 +175,10 @@ class Novedad(models.Model):
     id_novedad = models.AutoField(primary_key=True)
     asistencia = models.ForeignKey(Asistencia, on_delete=models.CASCADE)
     tipo_novedad = models.CharField(max_length=10, choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
-    observaciones = models.TextField(max_length=300)
+    observaciones = models.TextField(max_length=400)
     archivo_adjunto = models.FileField(upload_to='pdfs/')
     estado_novedad = models.BooleanField(default=False, choices=ESTADO_NOVEDAD_CHOICES)
+    
 
     def __str__(self):
         return f'{self.tipo_novedad} {self.id_novedad}'

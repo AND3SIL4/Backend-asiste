@@ -219,8 +219,16 @@ class InstructorViewSet(ModelViewSet):
     @action(detail=True, methods=["GET"])
     def lista_aprendices(self, request, pk=None):
         instructor = self.get_object()
-        fichas_del_instructor = instructor.fichas.all()
-        aprendices = Aprendiz.objects.filter(ficha_aprendiz__in=fichas_del_instructor)
+        ficha_id = request.query_params.get("ficha_id")
+
+        # Verificar si el instructor está asociado a la ficha especificada
+        if ficha_id not in [str(ficha.id_ficha) for ficha in instructor.fichas.all()]:
+            return Response(
+                {"error": "No tienes permiso para ver los aprendices de esta ficha."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        aprendices = Aprendiz.objects.filter(ficha_aprendiz__id_ficha=ficha_id)
         serializer = AprendizSerializer(aprendices, many=True)
         return Response(serializer.data)
 

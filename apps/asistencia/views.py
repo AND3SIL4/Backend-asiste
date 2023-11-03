@@ -21,47 +21,10 @@ from rest_framework.views import Response, status
 from django.db.models import Q
 from rest_framework.decorators import action
 
+from rest_framework.generics import UpdateAPIView
+
 
 # ARCHIVO CON LA LOGICA DE NEGOCIOS PARA LA APP DE REGISTRO DE ASISTENCIA
-# PERMISOS PARA USUARIOS
-#     queryset = Novedad.objects.all()
-#     serializer_class = NovedadSerializer
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [TokenAuthentication]
-
-#     def get_queryset(self):
-#         user = self.request.user
-
-#         # Aprendiz: puede ver sus propias novedades y datos de asistencia
-#         if IsAprendizUser().has_permission(self.request, self):
-#             return self.queryset.filter(aprendiz__user=user.document)
-
-#         # Instructor: puede ver novedades y actualizar datos de asistencia de sus aprendices
-#         if IsInstructorUser().has_permission(self.request, self):
-#             return self.queryset.filter(
-#                 Q(aprendiz__ficha_aprendiz__instructores__documento=user.document)
-#                 | Q(
-#                     aprendiz__ficha_aprendiz__instructores__instructor__documento=user.document
-#                 )
-#             )
-
-#         # instructores pueden editar novedades
-#         if IsInstructorUser().has_permission(self.request, self):
-#             return self.queryset
-
-#         # Si no es ninguno de los roles anteriores, no se permite el acceso
-#         return Novedad.objects.none()
-
-#     def perform_create(self, serializer):
-#         user = self.request.user
-
-#         # Aprendiz: vincula la novedad con su perfil
-#         if IsAprendizUser().has_permission(self.request, self):
-#             serializer.save(aprendiz__user=user)
-#         else:
-#             # Instructor, permiten vincular la novedad con cualquier aprendiz
-#             serializer.save()
-
 
 class NovedadListView(ModelViewSet):
     queryset = Novedad.objects.all()
@@ -314,3 +277,48 @@ class InstructorViewSet(ModelViewSet):
         return Response(
             asistencia_serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+# Metodo para obtener las asistencias de los aprendices
+class VerAsistenciasInstructorViewSet(ModelViewSet):
+    def list(self, request, instructor_id):
+        aprendiz_documento = request.query_params.get("aprendiz_documento")
+
+        try:
+            instructor = Instructor.objects.get(documento=instructor_id)
+            fichas = instructor.fichas.all()
+
+            # Crear una lista para almacenar las asistencias
+            asistencias = []
+
+            for ficha in fichas:
+                # Obtener las asistencias relacionadas con la ficha
+                asistencias_ficha = Asistencia.objects.filter(
+                    aprendiz__ficha_aprendiz=ficha
+                )
+
+                if aprendiz_documento:
+                    # Filtrar por el documento del aprendiz si se proporciona
+                    asistencias_ficha = asistencias_ficha.filter(
+                        aprendiz__documento_aprendiz=aprendiz_documento
+                    )
+
+                asistencias.extend(asistencias_ficha)
+
+            serializer = AsistenciaSerializer(asistencias, many=True)
+            return Response(serializer.data)
+        except Instructor.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class UpdateAsistenciaView(UpdateAPIView):
+    queryset = Asistencia.objects.all()
+    serializer_class = AsistenciaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

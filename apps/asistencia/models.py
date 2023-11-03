@@ -5,6 +5,7 @@ from apps.users.models import User
 
 # Our models here.
 
+
 ## Modelo de coordinacion
 class Coordinacion(models.Model):
     class Meta:
@@ -12,7 +13,9 @@ class Coordinacion(models.Model):
         verbose_name_plural = "Coordinaciones"
 
     id_coordinacion = models.IntegerField(primary_key=True, unique=True)
-    nombre_coordinacion = models.CharField(max_length=45, choices=[('TELEINFORMATICA', 'Teleinformática')])
+    nombre_coordinacion = models.CharField(
+        max_length=45, choices=[("TELEINFORMATICA", "Teleinformática")]
+    )
 
     def __str__(self):
         return self.nombre_coordinacion
@@ -39,18 +42,18 @@ class HorarioPorDia(models.Model):
         verbose_name_plural = "Horarios"
 
     JORNADA_CHOICES = (
-        ('DIURNA', 'Diurna'),
-        ('TARDE', 'Tarde'),
-        ('NOCTURNA', 'Nocturna')
+        ("DIURNA", "Diurna"),
+        ("TARDE", "Tarde"),
+        ("NOCTURNA", "Nocturna"),
     )
     DIAS_CHOICES = (
-        ('LUNES', 'Lunes'),
-        ('MARTES', 'Martes'),
-        ('MIERCOLES', 'Miercoles'),
-        ('JUEVES', 'Jueves'),
-        ('VIERNES', 'Viernes'),
-        ('SABADO', 'Sabado'),
-        ('DOMINGO', 'Domingo'),
+        ("LUNES", "Lunes"),
+        ("MARTES", "Martes"),
+        ("MIERCOLES", "Miercoles"),
+        ("JUEVES", "Jueves"),
+        ("VIERNES", "Viernes"),
+        ("SABADO", "Sabado"),
+        ("DOMINGO", "Domingo"),
     )
 
     horario_id = models.IntegerField(primary_key=True, unique=True)
@@ -70,10 +73,11 @@ class Ficha(models.Model):
     class Meta:
         verbose_name = "Ficha"
         verbose_name_plural = "Fichas"
+
     NIVEL_FORMACION_CHOICES = (
-        ('TECNICO', 'Técnico'),
-        ('TECNOLOGO', 'Tecnologo'),
-        ('COMPLEMENTARIO', 'Complementario'),
+        ("TECNICO", "Técnico"),
+        ("TECNOLOGO", "Tecnologo"),
+        ("COMPLEMENTARIO", "Complementario"),
     )
     id_ficha = models.IntegerField(primary_key=True)
     horario_ficha = models.ManyToManyField(HorarioPorDia)
@@ -96,9 +100,10 @@ class Instructor(models.Model):
     apellidos_instructor = models.CharField(max_length=45)
     email_institucional = models.CharField(max_length=50)
     fichas = models.ManyToManyField(Ficha)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
-    registro_asistencia = models.ManyToManyField('Asistencia', blank=True)
-
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="instructor"
+    )
+    registro_asistencia = models.ManyToManyField("Asistencia", blank=True)
 
     def __str__(self):
         return f"{self.nombres_instructor} {self.apellidos_instructor}"
@@ -114,9 +119,9 @@ class Aprendiz(models.Model):
         ("Transexual", "Transexual"),
     )
     TIPO_DOCUMENTO_CHOICES = (
-        ('CC', 'Cedula de ciudadanía'),
-        ('TI', 'Tarjeta de identidad'),
-        ('PEP', 'PEP')
+        ("CC", "Cedula de ciudadanía"),
+        ("TI", "Tarjeta de identidad"),
+        ("PEP", "PEP"),
     )
 
     documento_aprendiz = models.IntegerField(primary_key=True)
@@ -128,12 +133,14 @@ class Aprendiz(models.Model):
     numero_celular = models.BigIntegerField()
     genero_aprendiz = models.CharField(max_length=10, choices=GENERO_CHOICES)
     ficha_aprendiz = models.ForeignKey(Ficha, on_delete=models.CASCADE)
-    user = models.OneToOneField(User, related_name='aprendiz', on_delete=models.DO_NOTHING)
+    user = models.OneToOneField(
+        User, related_name="aprendiz", on_delete=models.DO_NOTHING
+    )
 
     class Meta:
         verbose_name = "Aprendiz"
         verbose_name_plural = "Aprendices"
-        ordering = ('-nombres_aprendiz',)
+        ordering = ("-nombres_aprendiz",)
 
     def __str__(self):
         return f"{self.nombres_aprendiz} {self.apellidos_aprendiz}"
@@ -146,15 +153,23 @@ class Asistencia(models.Model):
         verbose_name_plural = "Asistencias"
 
     ESTADO_ASISTENCIA_CHOICES = (
-        ('Asiste', 'Asiste'),
-        ('Falla', 'Falla'),
-        ('Retardo', 'Retardo'),
-        ('Novedad', 'Novedad'),
+        ("Asiste", "Asiste"),
+        ("Falla", "Falla"),
+        ("Retardo", "Retardo"),
+        ("Novedad", "Novedad"),
     )
     # horario = models.ManyToManyField(Horario, blank=False, null=False)
     fecha_asistencia = models.DateField()
-    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
-    presente = models.CharField(max_length=45, choices=ESTADO_ASISTENCIA_CHOICES,default=False, blank=False, null=False)
+    aprendiz = models.ForeignKey(
+        Aprendiz, on_delete=models.CASCADE, blank=False, null=False
+    )
+    presente = models.CharField(
+        max_length=45,
+        choices=ESTADO_ASISTENCIA_CHOICES,
+        default=False,
+        blank=False,
+        null=False,
+    )
 
     def __str__(self):
         return f"{self.fecha_asistencia} - {self.aprendiz.nombres_aprendiz}"
@@ -163,22 +178,27 @@ class Asistencia(models.Model):
 ## Modelo de novedades
 class Novedad(models.Model):
     ESTADO_NOVEDAD_CHOICES = (
-        (True, 'Aceptada'),
-        (False, 'No aceptada'),
+        (True, "Aceptada"),
+        (False, "No aceptada"),
     )
 
     class Meta:
-        verbose_name = 'Novedad'
-        verbose_name_plural = 'Novedades'
+        verbose_name = "Novedad"
+        verbose_name_plural = "Novedades"
 
-    aprendiz = models.ForeignKey(Aprendiz, on_delete=models.CASCADE, blank=False, null=False)
+    aprendiz = models.ForeignKey(
+        Aprendiz, on_delete=models.CASCADE, blank=False, null=False
+    )
     id_novedad = models.AutoField(primary_key=True)
     asistencia = models.ForeignKey(Asistencia, on_delete=models.CASCADE)
-    tipo_novedad = models.CharField(max_length=10, choices=[('Calamidad', 'Calamidad domestica'), ('Medica', 'Novedad medica')])
+    tipo_novedad = models.CharField(
+        max_length=10,
+        choices=[("Calamidad", "Calamidad domestica"), ("Medica", "Novedad medica")],
+    )
     observaciones = models.TextField(max_length=400)
-    archivo_adjunto = models.FileField(upload_to='pdfs/')
+    archivo_adjunto = models.FileField(upload_to="pdfs/")
     estado_novedad = models.BooleanField(default=False, choices=ESTADO_NOVEDAD_CHOICES)
-    
+    # fecha_novedad = models.DateField(auto_now_add=True) # (Preview)
 
     def __str__(self):
-        return f'{self.tipo_novedad} {self.id_novedad}'
+        return f"{self.tipo_novedad} {self.id_novedad}"

@@ -13,12 +13,11 @@ from apps.asistencia.models import (
 )
 
 
-
 ## Serializador datos coordinacion
 class CoordinacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coordinacion
-        fields = '__all__'
+        fields = "__all__"
 
 
 ## Serializador datos programa
@@ -27,14 +26,14 @@ class ProgramaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Programa
-        fields = '__all__'
+        fields = "__all__"
 
 
 ## Serializador datos horarios
 class HorarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = HorarioPorDia
-        fields = '__all__'
+        fields = "__all__"
 
 
 ## Serializador datos fichas
@@ -45,8 +44,7 @@ class FichaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ficha
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 ## Serializador datos instructor
@@ -56,18 +54,17 @@ class InstructorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Instructor
-        fields = '__all__'
+        fields = "__all__"
 
     # Método para obtener los detalles del usuario relacionado
     def get_user_details(self, instructor):
         user = instructor.user
         return {
-            'document': user.document,
-            'username': user.username,
-            'email': user.email,
-            'user_type': user.user_type
+            "document": user.document,
+            "username": user.username,
+            "email": user.email,
+            "user_type": user.user_type,
         }
-
 
 
 ## Serializador datos aprendices
@@ -77,16 +74,16 @@ class AprendizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Aprendiz
-        fields = '__all__'
+        fields = "__all__"
 
     # Método para obtener los detalles del usuario relacionado
     def get_user_details(self, aprendiz):
         user = aprendiz.user
         return {
-            'document': user.document,
-            'username': user.username,
-            'email': user.email,
-            'user_type': user.user_type
+            "document": user.document,
+            "username": user.username,
+            "email": user.email,
+            "user_type": user.user_type,
         }
 
     # Método para obtener los detalles de la ficha asociada
@@ -98,23 +95,31 @@ class AprendizSerializer(serializers.ModelSerializer):
 ## Serializador datos novedades
 class NovedadSerializer(serializers.ModelSerializer):
     # Campos de solo lectura para mostrar los detalles del usuario y la ficha
-    user = serializers.ReadOnlyField(source='aprendiz.user.username')
-    ficha = serializers.ReadOnlyField(source='aprendiz.ficha_aprendiz.id_ficha')
-    nombre = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')
-    apellidos = serializers.ReadOnlyField(source='aprendiz.apellidos_aprendiz')
-    documento = serializers.ReadOnlyField(source='aprendiz.documento_aprendiz')
+    user = serializers.ReadOnlyField(source="aprendiz.user.username")
+    ficha = serializers.ReadOnlyField(source="aprendiz.ficha_aprendiz.id_ficha")
+    nombre = serializers.ReadOnlyField(source="aprendiz.nombres_aprendiz")
+    apellidos = serializers.ReadOnlyField(source="aprendiz.apellidos_aprendiz")
+    documento = serializers.ReadOnlyField(source="aprendiz.documento_aprendiz")
+    # asistencia = serializers.SerializerMethodField()
 
     class Meta:
         model = Novedad
-        fields = '__all__'
+        fields = "__all__"
 
 
 ## Serializador datos asistencias
 class AsistenciaSerializer(serializers.ModelSerializer):
     fecha_asistencia = serializers.DateField()
-    nombres_aprendiz = serializers.ReadOnlyField(source='aprendiz.nombres_aprendiz')
-    apellidos_aprendiz = serializers.ReadOnlyField(source='aprendiz.apellidos_aprendiz')
+    nombres_aprendiz = serializers.ReadOnlyField(source="aprendiz.nombres_aprendiz")
+    apellidos_aprendiz = serializers.ReadOnlyField(source="aprendiz.apellidos_aprendiz")
 
     class Meta:
         model = Asistencia
-        fields = ['id', 'fecha_asistencia', 'nombres_aprendiz', 'apellidos_aprendiz', 'aprendiz', 'presente']
+        fields = [
+            "id",
+            "fecha_asistencia",
+            "nombres_aprendiz",
+            "apellidos_aprendiz",
+            "aprendiz",
+            "presente",
+        ]

@@ -314,7 +314,7 @@ class VerAsistenciasInstructorViewSet(ModelViewSet):
 class UpdateAsistenciaView(UpdateAPIView):
     queryset = Asistencia.objects.all()
     serializer_class = AsistenciaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsInstructorUser]
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()

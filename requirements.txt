@@ -6,7 +6,8 @@ pillow==10.0.0 # control y trabajo de imagenes
 django-ckeditor==6.6.1 # Para crear contenido mas dinamico
 django-environ==0.11.2 # para manipular y protejer las variables de entorno
 mysql==0.0.3 # trabajar con bases de datos mysql
-mysql-connector==2.2.9 # conector para bases de datos mysql
+
+
 mysql-connector-python==8.1.0 # conector de python para bases de datos mysql
 drf-spectacular==0.26.5 # ! No me acuerdo que hace :v
 django-cors-headers==4.3.0 # Libreria para habilitar el cors en el servidor
